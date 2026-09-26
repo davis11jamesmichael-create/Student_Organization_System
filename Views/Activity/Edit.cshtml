@@ -1,0 +1,109 @@
+@model StudentOrganizationSystem.Models.Activity
+
+@{
+    ViewData["Title"] = "Edit Activity";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Edit Activity</h1>
+        <p>Update activity information.</p>
+    </div>
+
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        Back to Activities
+    </a>
+</div>
+
+<div class="form-card">
+
+    <form asp-action="Edit" method="post">
+
+        @Html.AntiForgeryToken()
+
+        <input type="hidden"
+               asp-for="ActivityID" />
+
+        <div asp-validation-summary="ModelOnly"
+             class="validation-summary"></div>
+
+        <div class="form-group">
+            <label asp-for="ActivityTitle">
+                Activity Title
+            </label>
+
+            <input asp-for="ActivityTitle"
+                   class="form-control" />
+
+            <span asp-validation-for="ActivityTitle"
+                  class="validation-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="ActivityDate">
+                Activity Date
+            </label>
+
+            <input asp-for="ActivityDate"
+                   type="date"
+                   class="form-control" />
+
+            <span asp-validation-for="ActivityDate"
+                  class="validation-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Location">
+                Location
+            </label>
+
+            <input asp-for="Location"
+                   class="form-control" />
+
+            <span asp-validation-for="Location"
+                  class="validation-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Description">
+                Description
+            </label>
+
+            <textarea asp-for="Description"
+                      class="form-control"
+                      rows="5"></textarea>
+
+            <span asp-validation-for="Description"
+                  class="validation-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="IsActive">
+                Status
+            </label>
+
+            <select asp-for="IsActive"
+                    class="form-control">
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+            </select>
+        </div>
+
+        <div class="form-actions">
+
+            <a asp-action="Index"
+               class="btn btn-secondary">
+                Cancel
+            </a>
+
+            <button type="submit"
+                    class="btn btn-primary">
+                Save Changes
+            </button>
+
+        </div>
+
+    </form>
+
+</div>

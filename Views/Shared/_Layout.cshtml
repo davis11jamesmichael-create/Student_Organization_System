@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>
+        @ViewData["Title"] - Student Organization System
+    </title>
+
+    <link rel="stylesheet"
+          href="~/css/site.css" />
+</head>
+
+<body>
+
+    <header>
+        <nav class="navbar">
+
+            <div class="navbar-container">
+
+                <a class="brand"
+                   asp-controller="Home"
+                   asp-action="Index">
+                    Student Organization System
+                </a>
+
+                <div class="nav-links">
+
+    <a asp-controller="Home"
+       asp-action="Index">
+        Home
+    </a>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <a asp-controller="Member"
+   asp-action="Index">
+    Members
+</a>
+
+<a asp-controller="Activity" asp-action="Index">Activities</a>
+
+        <a href="#">
+            Attendance
+        </a>
+
+        <a href="#">
+            Reports
+        </a>
+
+        <form asp-controller="Account"
+              asp-action="Logout"
+              method="post"
+              style="display:inline;">
+
+            @Html.AntiForgeryToken()
+
+            <button type="submit"
+                    class="nav-logout">
+                Logout
+            </button>
+
+        </form>
+    }
+    else
+    {
+        <a asp-controller="Account"
+           asp-action="Login">
+            Login
+        </a>
+    }
+
+</div>
+
+            </div>
+
+        </nav>
+    </header>
+
+
+    <main class="main-content">
+
+        @RenderBody()
+
+    </main>
+
+
+    <footer class="footer">
+
+        <p>
+            &copy; @DateTime.Now.Year
+            Student Organization Management System
+        </p>
+
+    </footer>
+
+
+    <script src="~/js/site.js"></script>
+
+    @await RenderSectionAsync(
+        "Scripts",
+        required: false
+    )
+
+</body>
+</html>

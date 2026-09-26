@@ -1,0 +1,201 @@
+@model StudentOrganizationSystem.Models.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="dashboard-container">
+
+    <div class="dashboard-header">
+
+        <div>
+            <h1>Dashboard</h1>
+
+            <p>
+                Welcome,
+                <strong>@User.Identity?.Name</strong>.
+            </p>
+        </div>
+
+    </div>
+
+
+    <!-- Summary Cards -->
+
+    <div class="dashboard-cards">
+
+        <div class="dashboard-card">
+
+            <div class="card-label">
+                Total Members
+            </div>
+
+            <div class="card-number">
+                @Model.TotalMembers
+            </div>
+
+        </div>
+
+
+        <div class="dashboard-card">
+
+            <div class="card-label">
+                Active Members
+            </div>
+
+            <div class="card-number">
+                @Model.ActiveMembers
+            </div>
+
+        </div>
+
+
+        <div class="dashboard-card">
+
+            <div class="card-label">
+                Total Activities
+            </div>
+
+            <div class="card-number">
+                @Model.TotalActivities
+            </div>
+
+        </div>
+
+
+        <div class="dashboard-card">
+
+            <div class="card-label">
+                Active Activities
+            </div>
+
+            <div class="card-number">
+                @Model.ActiveActivities
+            </div>
+
+        </div>
+
+
+        <div class="dashboard-card">
+
+            <div class="card-label">
+                Attendance Records
+            </div>
+
+            <div class="card-number">
+                @Model.TotalAttendance
+            </div>
+
+        </div>
+
+
+        <div class="dashboard-card">
+
+            <div class="card-label">
+                Participation Records
+            </div>
+
+            <div class="card-number">
+                @Model.TotalParticipation
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Quick Access -->
+
+    <section class="quick-access">
+
+        <div class="section-heading-dashboard">
+
+            <h2>Quick Access</h2>
+
+            <p>
+                Access the main organization modules.
+            </p>
+
+        </div>
+
+
+        <div class="quick-access-grid">
+
+            <a asp-controller="Member"
+   asp-action="Index"
+   class="quick-card">
+
+    <h3>Members</h3>
+
+    <p>
+        Manage organization member records.
+    </p>
+
+</a>
+
+
+            <a asp-controller="Activity"
+   asp-action="Index"
+   class="quick-card">
+                
+                <h3>Activities</h3>
+
+                <p>
+                    Manage organization activities and events.
+                </p>
+
+            </a>
+
+
+            <a href="#"
+               class="quick-card">
+
+                <h3>Attendance</h3>
+
+                <p>
+                    Record and view attendance.
+                </p>
+
+            </a>
+
+
+            <a href="#"
+               class="quick-card">
+
+                <h3>Membership</h3>
+
+                <p>
+                    Monitor membership status and history.
+                </p>
+
+            </a>
+
+
+            <a href="#"
+               class="quick-card">
+
+                <h3>Participation</h3>
+
+                <p>
+                    Monitor member participation.
+                </p>
+
+            </a>
+
+
+            <a href="#"
+               class="quick-card">
+
+                <h3>Reports</h3>
+
+                <p>
+                    View organization records and reports.
+                </p>
+
+            </a>
+
+        </div>
+
+    </section>
+
+</div>

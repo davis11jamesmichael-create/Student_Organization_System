@@ -1,0 +1,147 @@
+@model StudentOrganizationSystem.Models.Member
+
+@{
+    ViewData["Title"] = "Member Details";
+}
+
+<div class="form-page">
+
+    <div class="form-page-header">
+
+        <h1>Member Details</h1>
+
+        <p>
+            View organization member information.
+        </p>
+
+    </div>
+
+
+    <div class="details-card">
+
+        <div class="detail-row">
+
+            <span class="detail-label">
+                Student ID
+            </span>
+
+            <span class="detail-value">
+                @Model.StudentID
+            </span>
+
+        </div>
+
+
+        <div class="detail-row">
+
+            <span class="detail-label">
+                Full Name
+            </span>
+
+            <span class="detail-value">
+                @Model.FullName
+            </span>
+
+        </div>
+
+
+        <div class="detail-row">
+
+            <span class="detail-label">
+                Course
+            </span>
+
+            <span class="detail-value">
+                @Model.Course
+            </span>
+
+        </div>
+
+
+        <div class="detail-row">
+
+            <span class="detail-label">
+                Year Level
+            </span>
+
+            <span class="detail-value">
+                @Model.YearLevel
+            </span>
+
+        </div>
+
+
+        <div class="detail-row">
+
+            <span class="detail-label">
+                Status
+            </span>
+
+            <span class="detail-value">
+
+                @if (Model.IsActive)
+                {
+                    <span class="status-active">
+                        Active
+                    </span>
+                }
+                else
+                {
+                    <span class="status-inactive">
+                        Inactive
+                    </span>
+                }
+
+            </span>
+
+        </div>
+
+
+        <div class="detail-row">
+
+            <span class="detail-label">
+                Date Registered
+            </span>
+
+            <span class="detail-value">
+                @Model.CreatedAt.ToString("MMMM dd, yyyy")
+            </span>
+
+        </div>
+
+
+        @if (Model.UpdatedAt.HasValue)
+        {
+            <div class="detail-row">
+
+                <span class="detail-label">
+                    Last Updated
+                </span>
+
+                <span class="detail-value">
+                    @Model.UpdatedAt.Value
+                        .ToString("MMMM dd, yyyy")
+                </span>
+
+            </div>
+        }
+
+
+        <div class="form-actions">
+
+            <a asp-action="Edit"
+               asp-route-id="@Model.MemberID"
+               class="btn-primary-custom">
+                Edit Member
+            </a>
+
+            <a asp-action="Index"
+               class="btn-light-custom">
+                Back to Members
+            </a>
+
+        </div>
+
+    </div>
+
+</div>

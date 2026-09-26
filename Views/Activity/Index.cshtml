@@ -1,0 +1,202 @@
+@model IEnumerable<StudentOrganizationSystem.Models.Activity>
+
+@{
+    ViewData["Title"] = "Activity Management";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Activity Management</h1>
+        <p>Manage organization activities and events.</p>
+    </div>
+
+    <a asp-action="Create" class="btn btn-primary">
+        + Add Activity
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+<div class="filter-card">
+    <form asp-action="Index" method="get" class="filter-form">
+
+        <div class="form-group">
+            <label>Activity Title</label>
+            <input type="text"
+                   name="search"
+                   value="@ViewBag.Search"
+                   placeholder="Search title..." />
+        </div>
+
+        <div class="form-group">
+            <label>Activity Date</label>
+            <input type="date"
+                   name="activityDate"
+                   value="@ViewBag.ActivityDate" />
+        </div>
+
+        <div class="form-group">
+            <label>Status</label>
+
+            <select name="status">
+                <option value="">All</option>
+
+                @if (ViewBag.Status == "Active")
+                {
+                    <option value="Active" selected>Active</option>
+                }
+                else
+                {
+                    <option value="Active">Active</option>
+                }
+
+                @if (ViewBag.Status == "Inactive")
+                {
+                    <option value="Inactive" selected>Inactive</option>
+                }
+                else
+                {
+                    <option value="Inactive">Inactive</option>
+                }
+            </select>
+        </div>
+
+        <div class="filter-buttons">
+            <button type="submit" class="btn btn-primary">
+                Search
+            </button>
+
+            <a asp-action="Index" class="btn btn-secondary">
+                Clear
+            </a>
+        </div>
+
+    </form>
+</div>
+
+<div class="table-card">
+
+    <div class="table-header">
+        <h2>Activities</h2>
+        <span>Total: @Model.Count()</span>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <p>No activities found.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+
+            <table class="data-table">
+
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Date</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                @foreach (var activity in Model)
+                {
+                    <tr>
+                        <td>
+                            <strong>@activity.ActivityTitle</strong>
+                        </td>
+
+                        <td>
+                            @activity.ActivityDate.ToString("MMM dd, yyyy")
+                        </td>
+
+                        <td>
+                            @activity.Location
+                        </td>
+
+                        <td>
+                            @if (activity.IsActive)
+                            {
+                                <span class="status-active">
+                                    Active
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="status-inactive">
+                                    Inactive
+                                </span>
+                            }
+                        </td>
+
+                        <td class="action-buttons">
+
+                            <a asp-action="Details"
+                               asp-route-id="@activity.ActivityID"
+                               class="btn btn-small btn-view">
+                                View
+                            </a>
+
+                            <a asp-action="Edit"
+                               asp-route-id="@activity.ActivityID"
+                               class="btn btn-small btn-edit">
+                                Edit
+                            </a>
+
+                            @if (activity.IsActive)
+                            {
+                                <form asp-action="Deactivate"
+                                      asp-route-id="@activity.ActivityID"
+                                      method="post"
+                                      style="display:inline;"
+                                      onsubmit="return confirm('Cancel/deactivate this activity?');">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <button type="submit"
+                                            class="btn btn-small btn-danger">
+                                        Cancel
+                                    </button>
+
+                                </form>
+                            }
+                            else
+                            {
+                                <form asp-action="Activate"
+                                      asp-route-id="@activity.ActivityID"
+                                      method="post"
+                                      style="display:inline;">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <button type="submit"
+                                            class="btn btn-small btn-success">
+                                        Activate
+                                    </button>
+
+                                </form>
+                            }
+
+                        </td>
+                    </tr>
+                }
+
+                </tbody>
+
+            </table>
+
+        </div>
+    }
+
+</div>

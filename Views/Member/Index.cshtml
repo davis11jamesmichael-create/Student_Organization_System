@@ -1,0 +1,258 @@
+@model IEnumerable<StudentOrganizationSystem.Models.Member>
+
+@{
+    ViewData["Title"] = "Members";
+}
+
+<div class="module-container">
+
+    <div class="module-header">
+
+        <div>
+            <h1>Members</h1>
+
+            <p>
+                Manage organization member records.
+            </p>
+        </div>
+
+        <a asp-action="Create"
+           class="btn-primary-custom">
+            + Add Member
+        </a>
+
+    </div>
+
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="success-message">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+
+    <!-- Search and Filter -->
+
+    <div class="filter-panel">
+
+        <form asp-action="Index"
+              method="get"
+              class="search-form">
+
+            <div class="search-field">
+
+                <label for="search">
+                    Search
+                </label>
+
+                <input type="text"
+                       id="search"
+                       name="search"
+                       value="@ViewBag.Search"
+                       placeholder="Name or Student ID" />
+
+            </div>
+
+
+            <div class="search-field">
+
+                <label for="status">
+                    Status
+                </label>
+
+                <select id="status"
+                        name="status">
+
+                    <option value="">
+                        All Members
+                    </option>
+
+                    @if (ViewBag.Status == "Active")
+                    {
+                        <option value="Active"
+                                selected>
+                            Active
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="Active">
+                            Active
+                        </option>
+                    }
+
+                    @if (ViewBag.Status == "Inactive")
+                    {
+                        <option value="Inactive"
+                                selected>
+                            Inactive
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="Inactive">
+                            Inactive
+                        </option>
+                    }
+
+                </select>
+
+            </div>
+
+
+            <button type="submit"
+                    class="btn-secondary-custom">
+                Search
+            </button>
+
+            <a asp-action="Index"
+               class="btn-light-custom">
+                Clear
+            </a>
+
+        </form>
+
+    </div>
+
+
+    <!-- Member Table -->
+
+    <div class="table-container">
+
+        <table class="data-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Student ID</th>
+
+                    <th>Student Name</th>
+
+                    <th>Course</th>
+
+                    <th>Year Level</th>
+
+                    <th>Status</th>
+
+                    <th>Actions</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @if (Model.Any())
+                {
+                    foreach (var member in Model)
+                    {
+                        <tr>
+
+                            <td>
+                                @member.StudentID
+                            </td>
+
+                            <td>
+                                @member.FullName
+                            </td>
+
+                            <td>
+                                @member.Course
+                            </td>
+
+                            <td>
+                                @member.YearLevel
+                            </td>
+
+                            <td>
+
+                                @if (member.IsActive)
+                                {
+                                    <span class="status-active">
+                                        Active
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="status-inactive">
+                                        Inactive
+                                    </span>
+                                }
+
+                            </td>
+
+                            <td>
+
+                                <div class="action-buttons">
+
+                                    <a asp-action="Details"
+                                       asp-route-id="@member.MemberID"
+                                       class="action-view">
+                                        View
+                                    </a>
+
+                                    <a asp-action="Edit"
+                                       asp-route-id="@member.MemberID"
+                                       class="action-edit">
+                                        Edit
+                                    </a>
+
+                                    @if (member.IsActive)
+                                    {
+                                        <form asp-action="Deactivate"
+                                              asp-route-id="@member.MemberID"
+                                              method="post">
+
+                                            @Html.AntiForgeryToken()
+
+                                            <button type="submit"
+                                                    class="action-danger">
+                                                Deactivate
+                                            </button>
+
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="Activate"
+                                              asp-route-id="@member.MemberID"
+                                              method="post">
+
+                                            @Html.AntiForgeryToken()
+
+                                            <button type="submit"
+                                                    class="action-activate">
+                                                Activate
+                                            </button>
+
+                                        </form>
+                                    }
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+
+                        <td colspan="6"
+                            class="empty-table">
+                            No members found.
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
