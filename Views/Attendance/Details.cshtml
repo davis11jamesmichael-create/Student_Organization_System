@@ -1,0 +1,95 @@
+@model IEnumerable<StudentOrganizationSystem.Models.Attendance>
+
+@{
+    ViewData["Title"] = "Attendance Details";
+    var activity = ViewBag.Activity as StudentOrganizationSystem.Models.Activity;
+    int presentCount = Model.Count(a => a.Status == "Present");
+    int absentCount  = Model.Count(a => a.Status == "Absent");
+}
+
+<div class="page-container">
+
+    <div class="page-header">
+        <div class="page-header-text">
+            <h1>Attendance Details</h1>
+            <p>
+                <strong>@activity?.ActivityTitle</strong>
+                &nbsp;·&nbsp; @activity?.ActivityDate.ToString("MMMM dd, yyyy")
+                &nbsp;·&nbsp; @activity?.Location
+            </p>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <a asp-action="Record" asp-route-id="@activity?.ActivityID"
+               class="btn btn-primary">Update</a>
+            <a asp-action="Index" class="btn btn-light">← Back</a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <div class="attendance-stats">
+        <div class="attendance-stat">
+            <div class="attendance-stat-label">Total Recorded</div>
+            <div class="attendance-stat-number">@Model.Count()</div>
+        </div>
+        <div class="attendance-stat">
+            <div class="attendance-stat-label">Present</div>
+            <div class="attendance-stat-number" style="color:var(--success-dark);">@presentCount</div>
+        </div>
+        <div class="attendance-stat">
+            <div class="attendance-stat-label">Absent</div>
+            <div class="attendance-stat-number" style="color:var(--danger-dark);">@absentCount</div>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="table-card-header">
+            <h2>Attendance List</h2>
+            <span class="record-count">@Model.Count() record(s)</span>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="empty-state"><p>No attendance records found.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Full Name</th>
+                            <th>Course</th>
+                            <th>Year Level</th>
+                            <th>Status</th>
+                            <th>Recorded At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model)
+                        {
+                            <tr>
+                                <td>@r.Member?.StudentID</td>
+                                <td><strong>@r.Member?.FullName</strong></td>
+                                <td>@r.Member?.Course</td>
+                                <td>@r.Member?.YearLevel</td>
+                                <td>
+                                    @if (r.Status == "Present")
+                                    { <span class="badge badge-present">Present</span> }
+                                    else
+                                    { <span class="badge badge-absent">Absent</span> }
+                                </td>
+                                <td>@r.RecordedAt.ToString("MMM dd, yyyy hh:mm tt")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+</div>

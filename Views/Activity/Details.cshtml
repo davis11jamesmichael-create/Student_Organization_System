@@ -4,126 +4,68 @@
     ViewData["Title"] = "Activity Details";
 }
 
-<div class="page-header">
-    <div>
-        <h1>Activity Details</h1>
-        <p>View complete activity information.</p>
+<div class="form-container">
+
+    <div class="page-header" style="margin-bottom:20px;">
+        <div class="page-header-text">
+            <h1>Activity Details</h1>
+            <p>View complete activity information</p>
+        </div>
+        <a asp-action="Index" class="btn btn-light">← Back</a>
     </div>
 
-    <a asp-action="Index"
-       class="btn btn-secondary">
-        Back to Activities
-    </a>
-</div>
+    <div class="details-card">
 
-<div class="details-card">
-
-    <div class="details-row">
-        <span class="details-label">
-            Activity ID
-        </span>
-
-        <span class="details-value">
-            @Model.ActivityID
-        </span>
-    </div>
-
-    <div class="details-row">
-        <span class="details-label">
-            Activity Title
-        </span>
-
-        <span class="details-value">
-            @Model.ActivityTitle
-        </span>
-    </div>
-
-    <div class="details-row">
-        <span class="details-label">
-            Activity Date
-        </span>
-
-        <span class="details-value">
-            @Model.ActivityDate.ToString("MMMM dd, yyyy")
-        </span>
-    </div>
-
-    <div class="details-row">
-        <span class="details-label">
-            Location
-        </span>
-
-        <span class="details-value">
-            @Model.Location
-        </span>
-    </div>
-
-    <div class="details-row">
-        <span class="details-label">
-            Description
-        </span>
-
-        <span class="details-value">
-            @(string.IsNullOrWhiteSpace(Model.Description)
-                ? "No description provided."
-                : Model.Description)
-        </span>
-    </div>
-
-    <div class="details-row">
-        <span class="details-label">
-            Status
-        </span>
-
-        <span class="details-value">
-            @if (Model.IsActive)
-            {
-                <span class="status-active">Active</span>
-            }
-            else
-            {
-                <span class="status-inactive">Inactive</span>
-            }
-        </span>
-    </div>
-
-    <div class="details-row">
-        <span class="details-label">
-            Created
-        </span>
-
-        <span class="details-value">
-            @Model.CreatedAt.ToString("MMMM dd, yyyy hh:mm tt")
-        </span>
-    </div>
-
-    @if (Model.UpdatedAt.HasValue)
-    {
         <div class="details-row">
-            <span class="details-label">
-                Last Updated
-            </span>
+            <span class="details-label">Title</span>
+            <span class="details-value"><strong>@Model.ActivityTitle</strong></span>
+        </div>
 
+        <div class="details-row">
+            <span class="details-label">Date</span>
+            <span class="details-value">@Model.ActivityDate.ToString("MMMM dd, yyyy")</span>
+        </div>
+
+        <div class="details-row">
+            <span class="details-label">Location</span>
+            <span class="details-value">@Model.Location</span>
+        </div>
+
+        <div class="details-row">
+            <span class="details-label">Description</span>
             <span class="details-value">
-                @Model.UpdatedAt.Value.ToString(
-                    "MMMM dd, yyyy hh:mm tt")
+                @(string.IsNullOrWhiteSpace(Model.Description) ? "—" : Model.Description)
             </span>
         </div>
-    }
 
-</div>
+        <div class="details-row">
+            <span class="details-label">Status</span>
+            <span class="details-value">
+                @if (Model.IsActive)
+                { <span class="badge badge-active">Active</span> }
+                else
+                { <span class="badge badge-inactive">Inactive</span> }
+            </span>
+        </div>
 
-<div class="details-actions">
+        <div class="details-row">
+            <span class="details-label">Created</span>
+            <span class="details-value">@Model.CreatedAt.ToString("MMMM dd, yyyy")</span>
+        </div>
 
-    <a asp-action="Edit"
-       asp-route-id="@Model.ActivityID"
-       class="btn btn-primary">
-        Edit Activity
-    </a>
+        @if (Model.UpdatedAt.HasValue)
+        {
+            <div class="details-row">
+                <span class="details-label">Last Updated</span>
+                <span class="details-value">@Model.UpdatedAt.Value.ToString("MMMM dd, yyyy")</span>
+            </div>
+        }
 
-    <a asp-action="Index"
-       class="btn btn-secondary">
-        Back
-    </a>
+        <div class="details-actions">
+            <a asp-action="Edit" asp-route-id="@Model.ActivityID" class="btn btn-primary">Edit</a>
+            <a asp-action="Index" class="btn btn-light">Back to Activities</a>
+        </div>
+
+    </div>
 
 </div>

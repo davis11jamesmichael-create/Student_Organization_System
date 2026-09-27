@@ -6,6 +6,10 @@ using StudentOrganizationSystem.Models;
 
 namespace StudentOrganizationSystem.Controllers
 {
+    // Role policy (AUDIT.md P0.6, decision D3):
+    //   any signed-in user -> Index, Details, adding a new activity, and recording
+    //                         attendance (that is the Officer's day-to-day work);
+    //   Admin only         -> changing or (de)activating an existing activity.
     [Authorize]
     public class ActivityController : Controller
     {
@@ -71,7 +75,7 @@ namespace StudentOrganizationSystem.Controllers
         // POST: /Activity/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Activity activity)
+        public async Task<IActionResult> Create([Bind("ActivityTitle,ActivityDate,Location,Description")] Activity activity)
         {
             if (!ModelState.IsValid)
             {
@@ -91,6 +95,7 @@ namespace StudentOrganizationSystem.Controllers
         }
 
         // GET: /Activity/Edit/5
+        [Authorize(Roles = AppRoles.Admin)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -112,9 +117,10 @@ namespace StudentOrganizationSystem.Controllers
         // POST: /Activity/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppRoles.Admin)]
         public async Task<IActionResult> Edit(
             int id,
-            Activity activity)
+            [Bind("ActivityID,ActivityTitle,ActivityDate,Location,Description,IsActive")] Activity activity)
         {
             if (id != activity.ActivityID)
             {
@@ -170,6 +176,7 @@ namespace StudentOrganizationSystem.Controllers
         // POST: /Activity/Deactivate/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppRoles.Admin)]
         public async Task<IActionResult> Deactivate(int id)
         {
             var activity = await _context.Activities
@@ -193,6 +200,7 @@ namespace StudentOrganizationSystem.Controllers
         // POST: /Activity/Activate/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppRoles.Admin)]
         public async Task<IActionResult> Activate(int id)
         {
             var activity = await _context.Activities

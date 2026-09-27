@@ -1,17 +1,17 @@
 @model IEnumerable<StudentOrganizationSystem.Models.Activity>
 
 @{
-    ViewData["Title"] = "Activities";
+    ViewData["Title"] = "Attendance";
+    var counts = ViewBag.AttendanceCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
 }
 
 <div class="page-container">
 
     <div class="page-header">
         <div class="page-header-text">
-            <h1>Activities</h1>
-            <p>Manage organization activities and events</p>
+            <h1>Attendance</h1>
+            <p>Select an activity to record or view attendance</p>
         </div>
-        <a asp-action="Create" class="btn btn-primary">+ Add Activity</a>
     </div>
 
     @if (TempData["Success"] != null)
@@ -22,13 +22,9 @@
     <div class="filter-card">
         <form asp-action="Index" method="get" class="filter-form">
             <div class="filter-group">
-                <label>Title</label>
+                <label>Activity Title</label>
                 <input type="text" name="search" value="@ViewBag.Search"
                        placeholder="Search title..." />
-            </div>
-            <div class="filter-group">
-                <label>Date</label>
-                <input type="date" name="activityDate" value="@ViewBag.ActivityDate" />
             </div>
             <div class="filter-group">
                 <label>Status</label>
@@ -55,7 +51,7 @@
 
     <div class="table-card">
         <div class="table-card-header">
-            <h2>Activity List</h2>
+            <h2>Activities</h2>
             <span class="record-count">@Model.Count() record(s)</span>
         </div>
 
@@ -73,44 +69,41 @@
                             <th>Date</th>
                             <th>Location</th>
                             <th>Status</th>
+                            <th>Attendance</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var a in Model)
+                        @foreach (var activity in Model)
                         {
+                            var count = counts.ContainsKey(activity.ActivityID)
+                                ? counts[activity.ActivityID] : 0;
                             <tr>
-                                <td><strong>@a.ActivityTitle</strong></td>
-                                <td>@a.ActivityDate.ToString("MMM dd, yyyy")</td>
-                                <td>@a.Location</td>
+                                <td><strong>@activity.ActivityTitle</strong></td>
+                                <td>@activity.ActivityDate.ToString("MMM dd, yyyy")</td>
+                                <td>@activity.Location</td>
                                 <td>
-                                    @if (a.IsActive)
+                                    @if (activity.IsActive)
                                     { <span class="badge badge-active">Active</span> }
                                     else
                                     { <span class="badge badge-inactive">Inactive</span> }
                                 </td>
                                 <td>
+                                    @if (count > 0)
+                                    { <span class="badge badge-present">@count member(s)</span> }
+                                    else
+                                    { <span style="color:var(--gray-400);font-size:12px;">Not recorded</span> }
+                                </td>
+                                <td>
                                     <div class="action-group">
-                                        <a asp-action="Details" asp-route-id="@a.ActivityID"
-                                           class="btn btn-sm btn-info">View</a>
-                                        <a asp-action="Edit" asp-route-id="@a.ActivityID"
-                                           class="btn btn-sm btn-warning">Edit</a>
-                                        @if (a.IsActive)
+                                        <a asp-action="Record" asp-route-id="@activity.ActivityID"
+                                           class="btn btn-sm btn-primary">
+                                            @(count > 0 ? "Update" : "Record")
+                                        </a>
+                                        @if (count > 0)
                                         {
-                                            <form asp-action="Deactivate" asp-route-id="@a.ActivityID"
-                                                  method="post" style="display:inline;"
-                                                  onsubmit="return confirm('Cancel this activity?');">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
-                                            </form>
-                                        }
-                                        else
-                                        {
-                                            <form asp-action="Activate" asp-route-id="@a.ActivityID"
-                                                  method="post" style="display:inline;">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-success">Activate</button>
-                                            </form>
+                                            <a asp-action="Details" asp-route-id="@activity.ActivityID"
+                                               class="btn btn-sm btn-info">View</a>
                                         }
                                     </div>
                                 </td>

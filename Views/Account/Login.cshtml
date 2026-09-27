@@ -2,100 +2,131 @@
 
 @{
     ViewData["Title"] = "Login";
+    Layout = null;
 }
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign in — Student Organization System</title>
+    <link rel="stylesheet" href="~/css/base.css" />
+    <link rel="stylesheet" href="~/css/components.css" />
+    <link rel="stylesheet" href="~/css/forms.css" />
+    <link rel="stylesheet" href="~/css/login.css" />
+</head>
+<body>
 
 <div class="login-page">
+    <div class="login-shell">
 
-    <div class="login-card">
+        <!-- ── Brand panel ── -->
+        <aside class="login-aside">
 
-        <div class="login-header">
-            <h1>Welcome Back</h1>
-
-            <p>
-                Student Organization Management System
-            </p>
-        </div>
-
-        <form asp-action="Login"
-              asp-controller="Account"
-              method="post">
-
-            @Html.AntiForgeryToken()
-
-            <div asp-validation-summary="ModelOnly"
-                 class="validation-summary">
+            <div class="login-aside-brand">
+                <span class="login-aside-brand-icon">🎓</span>
+                Student Org System
             </div>
 
-            <div class="form-group">
+            <div class="login-aside-body">
+                <h2 class="login-aside-title">
+                    Student Organization Membership &amp; Activity Management System
+                </h2>
 
-                <label asp-for="Username">
-                    Username
-                </label>
+                <p class="login-aside-desc">
+                    A single workspace for keeping member records, activities,
+                    and attendance organized — no more scattered lists.
+                </p>
 
-                <input asp-for="Username"
-                       class="form-control"
-                       placeholder="Enter your username"
-                       autocomplete="username" />
-
-                <span asp-validation-for="Username"
-                      class="validation-message">
-                </span>
-
+                <ul class="login-features">
+                    <li class="login-feature">
+                        <span class="login-feature-icon">👥</span>
+                        <div>
+                            <strong>Member Management</strong>
+                            <span>Register members and monitor active status.</span>
+                        </div>
+                    </li>
+                    <li class="login-feature">
+                        <span class="login-feature-icon">📅</span>
+                        <div>
+                            <strong>Activity Management</strong>
+                            <span>Plan events, schedules, and venues.</span>
+                        </div>
+                    </li>
+                    <li class="login-feature">
+                        <span class="login-feature-icon">📋</span>
+                        <div>
+                            <strong>Attendance Records</strong>
+                            <span>Mark present or absent per activity, instantly.</span>
+                        </div>
+                    </li>
+                </ul>
             </div>
 
-
-            <div class="form-group">
-
-                <label asp-for="Password">
-                    Password
-                </label>
-
-                <input asp-for="Password"
-                       class="form-control"
-                       placeholder="Enter your password"
-                       autocomplete="current-password" />
-
-                <span asp-validation-for="Password"
-                      class="validation-message">
-                </span>
-
-            </div>
-
-
-            <div class="remember-row">
-
-                <label>
-                    <input asp-for="RememberMe" />
-
-                    Remember Me
-                </label>
-
-            </div>
-
-
-            <button type="submit"
-                    class="login-button">
-
-                Login
-
-            </button>
-
-        </form>
-
-        <div class="login-footer">
-
-            <p>
-                Authorized organization users only.
+            <p class="login-aside-foot">
+                &copy; @DateTime.Now.Year Student Organization Management System
             </p>
 
-        </div>
+        </aside>
+
+        <!-- ── Sign in form ── -->
+        <main class="login-panel">
+
+            <div class="login-card">
+
+                <div class="login-head">
+                    <div class="login-logo">🎓</div>
+                    <h1>Welcome back</h1>
+                    <p>Sign in to continue to your dashboard.</p>
+                </div>
+
+                <form asp-action="Login" asp-controller="Account" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+                    <div class="form-group">
+                        <label asp-for="Username">Username</label>
+                        <input asp-for="Username" class="form-control"
+                               placeholder="Enter your username"
+                               autocomplete="username" />
+                        <span asp-validation-for="Username" class="validation-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Password">Password</label>
+                        <input asp-for="Password" class="form-control"
+                               placeholder="Enter your password"
+                               autocomplete="current-password" />
+                        <span asp-validation-for="Password" class="validation-message"></span>
+                    </div>
+
+                    <label class="remember-row">
+                        <input asp-for="RememberMe" />
+                        Keep me signed in
+                    </label>
+
+                    <button type="submit" class="login-btn">Sign in</button>
+
+                </form>
+
+                <p class="login-note">
+                    Authorized users only. Contact the organization adviser if you need an account.
+                </p>
+
+            </div>
+
+            <p class="login-mobile-brand">
+                &copy; @DateTime.Now.Year Student Organization Management System
+            </p>
+
+        </main>
 
     </div>
-
 </div>
 
-@section Scripts {
+<partial name="_ValidationScriptsPartial" />
 
-    <partial name="_ValidationScriptsPartial" />
-
-}
+</body>
+</html>

@@ -1,0 +1,107 @@
+/* navbar.css — top bar of the app shell (title, user, sign out, mobile toggle) */
+
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 70;
+    height: var(--topbar-height);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 24px;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+/* Hidden on desktop — the drawer toggle only appears on smaller screens
+   (selector is more specific than .icon-btn in components.css) */
+.topbar .topbar-toggle {
+    display: none;
+}
+
+.topbar-title {
+    min-width: 0;
+}
+
+.topbar-title h1 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gray-900);
+    letter-spacing: -0.2px;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.topbar-title span {
+    display: block;
+    font-size: 11px;
+    color: var(--gray-400);
+}
+
+.topbar-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* ── User chip ── */
+
+.topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 4px 14px 4px 5px;
+    border: 1px solid var(--gray-200);
+    border-radius: 999px;
+    background: var(--white);
+}
+
+.topbar-user-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    min-width: 0;
+}
+
+.topbar-user-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-800);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.topbar-user-role {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--primary);
+}
+
+/* ── Quick sign out (kept for other pages) ── */
+
+.nav-logout {
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-200);
+    background: var(--white);
+    color: var(--gray-600);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.nav-logout:hover {
+    background: var(--danger-light);
+    border-color: var(--danger);
+    color: var(--danger-dark);
+}

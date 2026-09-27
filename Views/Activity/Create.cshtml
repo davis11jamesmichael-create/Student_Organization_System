@@ -4,93 +4,55 @@
     ViewData["Title"] = "Add Activity";
 }
 
-<div class="page-header">
-    <div>
-        <h1>Add Activity</h1>
-        <p>Create a new organization activity or event.</p>
+<div class="form-container">
+
+    <div class="page-header" style="margin-bottom:20px;">
+        <div class="page-header-text">
+            <h1>Add Activity</h1>
+            <p>Create a new organization activity or event</p>
+        </div>
+        <a asp-action="Index" class="btn btn-light">← Back</a>
     </div>
 
-    <a asp-action="Index" class="btn btn-secondary">
-        Back to Activities
-    </a>
-</div>
+    <div class="form-card">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
-<div class="form-card">
+            <div class="form-group">
+                <label asp-for="ActivityTitle">Activity Title</label>
+                <input asp-for="ActivityTitle" class="form-control" placeholder="Enter activity title" />
+                <span asp-validation-for="ActivityTitle" class="validation-message"></span>
+            </div>
 
-    <form asp-action="Create" method="post">
+            <div class="form-group">
+                <label asp-for="ActivityDate">Activity Date</label>
+                <input asp-for="ActivityDate" type="date" class="form-control" />
+                <span asp-validation-for="ActivityDate" class="validation-message"></span>
+            </div>
 
-        @Html.AntiForgeryToken()
+            <div class="form-group">
+                <label asp-for="Location">Location</label>
+                <input asp-for="Location" class="form-control" placeholder="Enter location" />
+                <span asp-validation-for="Location" class="validation-message"></span>
+            </div>
 
-        <div asp-validation-summary="ModelOnly"
-             class="validation-summary"></div>
+            <div class="form-group">
+                <label asp-for="Description">Description <span style="font-weight:400;color:var(--gray-400);">(optional)</span></label>
+                <textarea asp-for="Description" class="form-control" rows="4"
+                          placeholder="Enter activity description"></textarea>
+                <span asp-validation-for="Description" class="validation-message"></span>
+            </div>
 
-        <div class="form-group">
-            <label asp-for="ActivityTitle">
-                Activity Title
-            </label>
-
-            <input asp-for="ActivityTitle"
-                   class="form-control"
-                   placeholder="Enter activity title" />
-
-            <span asp-validation-for="ActivityTitle"
-                  class="validation-error"></span>
-        </div>
-
-        <div class="form-group">
-            <label asp-for="ActivityDate">
-                Activity Date
-            </label>
-
-            <input asp-for="ActivityDate"
-                   type="date"
-                   class="form-control" />
-
-            <span asp-validation-for="ActivityDate"
-                  class="validation-error"></span>
-        </div>
-
-        <div class="form-group">
-            <label asp-for="Location">
-                Location
-            </label>
-
-            <input asp-for="Location"
-                   class="form-control"
-                   placeholder="Enter activity location" />
-
-            <span asp-validation-for="Location"
-                  class="validation-error"></span>
-        </div>
-
-        <div class="form-group">
-            <label asp-for="Description">
-                Description
-            </label>
-
-            <textarea asp-for="Description"
-                      class="form-control"
-                      rows="5"
-                      placeholder="Enter activity description"></textarea>
-
-            <span asp-validation-for="Description"
-                  class="validation-error"></span>
-        </div>
-
-        <div class="form-actions">
-
-            <a asp-action="Index"
-               class="btn btn-secondary">
-                Cancel
-            </a>
-
-            <button type="submit"
-                    class="btn btn-primary">
-                Save Activity
-            </button>
-
-        </div>
-
-    </form>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Activity</button>
+                <a asp-action="Index" class="btn btn-light">Cancel</a>
+            </div>
+        </form>
+    </div>
 
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

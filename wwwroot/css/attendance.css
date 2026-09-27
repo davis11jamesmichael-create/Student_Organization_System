@@ -1,0 +1,119 @@
+/* attendance.css */
+
+.attendance-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--gray-100);
+    gap: 16px;
+    transition: background var(--transition);
+}
+
+.attendance-row:last-child {
+    border-bottom: none;
+}
+
+.attendance-row:hover {
+    background: var(--gray-50);
+}
+
+.attendance-member {
+    flex: 1;
+    min-width: 0;
+}
+
+.attendance-member-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-800);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.attendance-member-meta {
+    font-size: 12px;
+    color: var(--gray-400);
+    margin-top: 1px;
+}
+
+/* ── Radio toggle ── */
+
+.radio-group {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--gray-200);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-500);
+    transition: all var(--transition);
+    user-select: none;
+    background: var(--white);
+}
+
+.radio-option input[type="radio"] {
+    display: none;
+}
+
+.radio-option:hover {
+    border-color: var(--gray-300);
+    color: var(--gray-700);
+}
+
+.radio-option.present.selected,
+.radio-option.present:has(input:checked) {
+    background: var(--success-light);
+    border-color: var(--success);
+    color: var(--success-dark);
+}
+
+.radio-option.absent.selected,
+.radio-option.absent:has(input:checked) {
+    background: var(--danger-light);
+    border-color: var(--danger);
+    color: var(--danger-dark);
+}
+
+/* ── Attendance summary stats ── */
+
+.attendance-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.attendance-stat {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: var(--shadow-sm);
+}
+
+.attendance-stat-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.attendance-stat-number {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--gray-900);
+    line-height: 1;
+}

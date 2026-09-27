@@ -2,200 +2,150 @@
 
 @{
     ViewData["Title"] = "Dashboard";
+
+    var userName = User.Identity?.Name ?? "User";
 }
 
-<div class="dashboard-container">
+<div class="page-container">
 
-    <div class="dashboard-header">
+    <section class="dashboard-hero">
 
-        <div>
-            <h1>Dashboard</h1>
-
+        <div class="dashboard-hero-text">
+            <h1>Good day, @userName 👋</h1>
             <p>
-                Welcome,
-                <strong>@User.Identity?.Name</strong>.
+                @DateTime.Now.ToString("dddd, MMMM d, yyyy")
+                &nbsp;·&nbsp; Here's what's happening in the organization.
             </p>
         </div>
 
-    </div>
-
-
-    <!-- Summary Cards -->
-
-    <div class="dashboard-cards">
-
-        <div class="dashboard-card">
-
-            <div class="card-label">
-                Total Members
-            </div>
-
-            <div class="card-number">
-                @Model.TotalMembers
-            </div>
-
-        </div>
-
-
-        <div class="dashboard-card">
-
-            <div class="card-label">
-                Active Members
-            </div>
-
-            <div class="card-number">
-                @Model.ActiveMembers
-            </div>
-
-        </div>
-
-
-        <div class="dashboard-card">
-
-            <div class="card-label">
-                Total Activities
-            </div>
-
-            <div class="card-number">
-                @Model.TotalActivities
-            </div>
-
-        </div>
-
-
-        <div class="dashboard-card">
-
-            <div class="card-label">
-                Active Activities
-            </div>
-
-            <div class="card-number">
-                @Model.ActiveActivities
-            </div>
-
-        </div>
-
-
-        <div class="dashboard-card">
-
-            <div class="card-label">
-                Attendance Records
-            </div>
-
-            <div class="card-number">
-                @Model.TotalAttendance
-            </div>
-
-        </div>
-
-
-        <div class="dashboard-card">
-
-            <div class="card-label">
-                Participation Records
-            </div>
-
-            <div class="card-number">
-                @Model.TotalParticipation
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- Quick Access -->
-
-    <section class="quick-access">
-
-        <div class="section-heading-dashboard">
-
-            <h2>Quick Access</h2>
-
-            <p>
-                Access the main organization modules.
-            </p>
-
-        </div>
-
-
-        <div class="quick-access-grid">
-
-            <a asp-controller="Member"
-   asp-action="Index"
-   class="quick-card">
-
-    <h3>Members</h3>
-
-    <p>
-        Manage organization member records.
-    </p>
-
-</a>
-
-
-            <a asp-controller="Activity"
-   asp-action="Index"
-   class="quick-card">
-                
-                <h3>Activities</h3>
-
-                <p>
-                    Manage organization activities and events.
-                </p>
-
+        <div class="dashboard-hero-actions">
+            <a asp-controller="Member" asp-action="Create" class="hero-btn">
+                + Add Member
             </a>
-
-
-            <a href="#"
-               class="quick-card">
-
-                <h3>Attendance</h3>
-
-                <p>
-                    Record and view attendance.
-                </p>
-
+            <a asp-controller="Attendance" asp-action="Index"
+               class="hero-btn hero-btn-outline">
+                Record Attendance
             </a>
-
-
-            <a href="#"
-               class="quick-card">
-
-                <h3>Membership</h3>
-
-                <p>
-                    Monitor membership status and history.
-                </p>
-
-            </a>
-
-
-            <a href="#"
-               class="quick-card">
-
-                <h3>Participation</h3>
-
-                <p>
-                    Monitor member participation.
-                </p>
-
-            </a>
-
-
-            <a href="#"
-               class="quick-card">
-
-                <h3>Reports</h3>
-
-                <p>
-                    View organization records and reports.
-                </p>
-
-            </a>
-
         </div>
 
     </section>
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <div class="stat-icon indigo">👥</div>
+            <div class="stat-body">
+                <div class="stat-label">Total Members</div>
+                <div class="stat-number">@Model.TotalMembers</div>
+                <div class="stat-sub">@Model.ActiveMembers active</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon green">✅</div>
+            <div class="stat-body">
+                <div class="stat-label">Active Members</div>
+                <div class="stat-number">@Model.ActiveMembers</div>
+                <div class="stat-sub">of @Model.TotalMembers total</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon blue">📅</div>
+            <div class="stat-body">
+                <div class="stat-label">Total Activities</div>
+                <div class="stat-number">@Model.TotalActivities</div>
+                <div class="stat-sub">@Model.ActiveActivities active</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon amber">🎯</div>
+            <div class="stat-body">
+                <div class="stat-label">Active Activities</div>
+                <div class="stat-number">@Model.ActiveActivities</div>
+                <div class="stat-sub">of @Model.TotalActivities total</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon indigo">📋</div>
+            <div class="stat-body">
+                <div class="stat-label">Attendance Records</div>
+                <div class="stat-number">@Model.TotalAttendance</div>
+                <div class="stat-sub">across all activities</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon green">🏅</div>
+            <div class="stat-body">
+                <div class="stat-label">Participation Records</div>
+                <div class="stat-number">@Model.TotalParticipation</div>
+                <div class="stat-sub">across all activities</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="section-title">Quick Access</div>
+
+    <div class="quick-grid">
+
+        <a asp-controller="Member" asp-action="Index" class="quick-card">
+            <div class="quick-card-icon">👥</div>
+            <div class="quick-card-text">
+                <h3>Members</h3>
+                <p>Manage member records</p>
+            </div>
+            <span class="quick-card-arrow" aria-hidden="true">→</span>
+        </a>
+
+        <a asp-controller="Activity" asp-action="Index" class="quick-card">
+            <div class="quick-card-icon">📅</div>
+            <div class="quick-card-text">
+                <h3>Activities</h3>
+                <p>Manage activities and events</p>
+            </div>
+            <span class="quick-card-arrow" aria-hidden="true">→</span>
+        </a>
+
+        <a asp-controller="Attendance" asp-action="Index" class="quick-card">
+            <div class="quick-card-icon">📋</div>
+            <div class="quick-card-text">
+                <h3>Attendance</h3>
+                <p>Record and view attendance</p>
+            </div>
+            <span class="quick-card-arrow" aria-hidden="true">→</span>
+        </a>
+
+        <div class="quick-card is-soon">
+            <div class="quick-card-icon">🪪</div>
+            <div class="quick-card-text">
+                <h3>Membership</h3>
+                <p>Monitor membership status</p>
+            </div>
+            <span class="chip-soon">Soon</span>
+        </div>
+
+        <div class="quick-card is-soon">
+            <div class="quick-card-icon">🏅</div>
+            <div class="quick-card-text">
+                <h3>Participation</h3>
+                <p>Monitor member participation</p>
+            </div>
+            <span class="chip-soon">Soon</span>
+        </div>
+
+        <div class="quick-card is-soon">
+            <div class="quick-card-icon">📈</div>
+            <div class="quick-card-text">
+                <h3>Reports</h3>
+                <p>View records and reports</p>
+            </div>
+            <span class="chip-soon">Soon</span>
+        </div>
+
+    </div>
 
 </div>

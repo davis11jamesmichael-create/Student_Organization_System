@@ -1,0 +1,93 @@
+@model IEnumerable<StudentOrganizationSystem.Models.Member>
+
+@{
+    ViewData["Title"] = "Record Attendance";
+    var activity = ViewBag.Activity as StudentOrganizationSystem.Models.Activity;
+    var existing = ViewBag.ExistingAttendance as Dictionary<int, string>
+                   ?? new Dictionary<int, string>();
+}
+
+<div class="page-container">
+
+    <div class="page-header">
+        <div class="page-header-text">
+            <h1>Record Attendance</h1>
+            <p>
+                <strong>@activity?.ActivityTitle</strong>
+                &nbsp;·&nbsp; @activity?.ActivityDate.ToString("MMMM dd, yyyy")
+                &nbsp;·&nbsp; @activity?.Location
+            </p>
+        </div>
+        <a asp-action="Index" class="btn btn-light">← Back</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            No active members found. Please add members first.
+        </div>
+    }
+    else
+    {
+        <form asp-action="Record" asp-route-id="@activity?.ActivityID" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="table-card" style="margin-bottom:16px;">
+                <div class="table-card-header">
+                    <h2>Members</h2>
+                    <span class="record-count">@Model.Count() active member(s)</span>
+                </div>
+
+                @foreach (var member in Model)
+                {
+                    var status = existing.ContainsKey(member.MemberID)
+                        ? existing[member.MemberID] : "Present";
+
+                    <div class="attendance-row">
+                        <div class="attendance-member">
+                            <div class="attendance-member-name">@member.FullName</div>
+                            <div class="attendance-member-meta">
+                                @member.StudentID · @member.Course · @member.YearLevel
+                            </div>
+                        </div>
+                        <div class="radio-group">
+                            <label class="radio-option present @(status == "Present" ? "selected" : "")">
+                                <input type="radio"
+                                       name="attendance[@member.MemberID]"
+                                       value="Present"
+                                       @(status == "Present" ? "checked" : "") />
+                                Present
+                            </label>
+                            <label class="radio-option absent @(status == "Absent" ? "selected" : "")">
+                                <input type="radio"
+                                       name="attendance[@member.MemberID]"
+                                       value="Absent"
+                                       @(status == "Absent" ? "checked" : "") />
+                                Absent
+                            </label>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div style="display:flex;gap:8px;">
+                <button type="submit" class="btn btn-primary">Save Attendance</button>
+                <a asp-action="Index" class="btn btn-light">Cancel</a>
+            </div>
+
+        </form>
+    }
+
+</div>
+
+<script>
+    document.querySelectorAll('.radio-option input[type="radio"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            var group = this.closest('.radio-group');
+            group.querySelectorAll('.radio-option').forEach(function (opt) {
+                opt.classList.remove('selected');
+            });
+            this.closest('.radio-option').classList.add('selected');
+        });
+    });
+</script>

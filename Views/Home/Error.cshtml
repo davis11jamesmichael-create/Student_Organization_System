@@ -1,0 +1,46 @@
+@model ErrorViewModel
+
+@{
+    ViewData["Title"] = Model.IsNotFound ? "Page not found" : "Error";
+}
+
+<div class="page-container">
+
+    <div class="error-page">
+
+        <div class="error-page-icon" aria-hidden="true">@(Model.IsNotFound ? "🔍" : "⚠️")</div>
+
+        <span class="error-page-code">Error @Model.StatusCode</span>
+
+        <h1>@Model.Title</h1>
+
+        <p>@Model.Message</p>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Path))
+        {
+            <p class="error-page-meta">
+                Address that failed: <code>@Model.Path</code>
+            </p>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.Detail))
+        {
+            <pre class="error-page-detail">@Model.Detail</pre>
+        }
+
+        @if (Model.ShowRequestId)
+        {
+            <p class="error-page-meta">
+                Reference for your administrator: <code>@Model.RequestId</code>
+            </p>
+        }
+
+        <div class="error-page-actions">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+                Back to Dashboard
+            </a>
+        </div>
+
+    </div>
+
+</div>

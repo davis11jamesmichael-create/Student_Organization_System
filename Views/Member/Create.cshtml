@@ -4,115 +4,54 @@
     ViewData["Title"] = "Add Member";
 }
 
-<div class="form-page">
+<div class="form-container">
 
-    <div class="form-page-header">
-
-        <h1>Add Member</h1>
-
-        <p>
-            Register a new organization member.
-        </p>
-
+    <div class="page-header" style="margin-bottom:20px;">
+        <div class="page-header-text">
+            <h1>Add Member</h1>
+            <p>Register a new organization member</p>
+        </div>
+        <a asp-action="Index" class="btn btn-light">← Back</a>
     </div>
 
-
     <div class="form-card">
-
-        <form asp-action="Create"
-              method="post">
-
+        <form asp-action="Create" method="post">
             @Html.AntiForgeryToken()
-
-            <div asp-validation-summary="ModelOnly"
-                 class="validation-summary">
-            </div>
-
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
             <div class="form-group">
-
-                <label asp-for="StudentID">
-                    Student ID
-                </label>
-
-                <input asp-for="StudentID"
-                       class="form-control"
-                       placeholder="Enter student ID" />
-
-                <span asp-validation-for="StudentID"
-                      class="validation-message">
-                </span>
-
+                <label asp-for="StudentID">Student ID</label>
+                <input asp-for="StudentID" class="form-control" placeholder="e.g. 2024-00001" />
+                <span asp-validation-for="StudentID" class="validation-message"></span>
             </div>
-
 
             <div class="form-group">
-
-                <label asp-for="FullName">
-                    Full Name
-                </label>
-
-                <input asp-for="FullName"
-                       class="form-control"
-                       placeholder="Enter full name" />
-
-                <span asp-validation-for="FullName"
-                      class="validation-message">
-                </span>
-
+                <label asp-for="FullName">Full Name</label>
+                <input asp-for="FullName" class="form-control" placeholder="Last Name, First Name M.I." />
+                <span asp-validation-for="FullName" class="validation-message"></span>
             </div>
-
 
             <div class="form-group">
-
-                <label asp-for="Course">
-                    Course
-                </label>
-
-                <input asp-for="Course"
-                       class="form-control"
-                       placeholder="Enter course" />
-
-                <span asp-validation-for="Course"
-                      class="validation-message">
-                </span>
-
+                <label asp-for="Course">Course</label>
+                <input asp-for="Course" class="form-control" placeholder="e.g. BS Computer Science" />
+                <span asp-validation-for="Course" class="validation-message"></span>
             </div>
-
 
             <div class="form-group">
-
-                <label asp-for="YearLevel">
-                    Year Level
-                </label>
-
-                <input asp-for="YearLevel"
-                       class="form-control"
-                       placeholder="Example: 3rd Year" />
-
-                <span asp-validation-for="YearLevel"
-                      class="validation-message">
-                </span>
-
+                <label asp-for="YearLevel">Year Level</label>
+                <input asp-for="YearLevel" class="form-control" placeholder="e.g. 3rd Year" />
+                <span asp-validation-for="YearLevel" class="validation-message"></span>
             </div>
-
 
             <div class="form-actions">
-
-                <button type="submit"
-                        class="btn-primary-custom">
-                    Save Member
-                </button>
-
-                <a asp-action="Index"
-                   class="btn-light-custom">
-                    Cancel
-                </a>
-
+                <button type="submit" class="btn btn-primary">Save Member</button>
+                <a asp-action="Index" class="btn btn-light">Cancel</a>
             </div>
-
         </form>
-
     </div>
 
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

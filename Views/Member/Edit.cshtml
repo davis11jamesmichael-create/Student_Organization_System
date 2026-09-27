@@ -4,137 +4,63 @@
     ViewData["Title"] = "Edit Member";
 }
 
-<div class="form-page">
+<div class="form-container">
 
-    <div class="form-page-header">
-
-        <h1>Edit Member</h1>
-
-        <p>
-            Update the member's information.
-        </p>
-
+    <div class="page-header" style="margin-bottom:20px;">
+        <div class="page-header-text">
+            <h1>Edit Member</h1>
+            <p>Update member information</p>
+        </div>
+        <a asp-action="Index" class="btn btn-light">← Back</a>
     </div>
 
-
     <div class="form-card">
-
-        <form asp-action="Edit"
-              method="post">
-
+        <form asp-action="Edit" method="post">
             @Html.AntiForgeryToken()
-
-            <input type="hidden"
-                   asp-for="MemberID" />
-
-
-            <div asp-validation-summary="ModelOnly"
-                 class="validation-summary">
-            </div>
-
+            <input type="hidden" asp-for="MemberID" />
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
             <div class="form-group">
-
-                <label asp-for="StudentID">
-                    Student ID
-                </label>
-
-                <input asp-for="StudentID"
-                       class="form-control" />
-
-                <span asp-validation-for="StudentID"
-                      class="validation-message">
-                </span>
-
+                <label asp-for="StudentID">Student ID</label>
+                <input asp-for="StudentID" class="form-control" />
+                <span asp-validation-for="StudentID" class="validation-message"></span>
             </div>
 
-
             <div class="form-group">
-
-                <label asp-for="FullName">
-                    Full Name
-                </label>
-
-                <input asp-for="FullName"
-                       class="form-control" />
-
-                <span asp-validation-for="FullName"
-                      class="validation-message">
-                </span>
-
+                <label asp-for="FullName">Full Name</label>
+                <input asp-for="FullName" class="form-control" />
+                <span asp-validation-for="FullName" class="validation-message"></span>
             </div>
 
-
             <div class="form-group">
-
-                <label asp-for="Course">
-                    Course
-                </label>
-
-                <input asp-for="Course"
-                       class="form-control" />
-
-                <span asp-validation-for="Course"
-                      class="validation-message">
-                </span>
-
+                <label asp-for="Course">Course</label>
+                <input asp-for="Course" class="form-control" />
+                <span asp-validation-for="Course" class="validation-message"></span>
             </div>
 
-
             <div class="form-group">
-
-                <label asp-for="YearLevel">
-                    Year Level
-                </label>
-
-                <input asp-for="YearLevel"
-                       class="form-control" />
-
-                <span asp-validation-for="YearLevel"
-                      class="validation-message">
-                </span>
-
+                <label asp-for="YearLevel">Year Level</label>
+                <input asp-for="YearLevel" class="form-control" />
+                <span asp-validation-for="YearLevel" class="validation-message"></span>
             </div>
 
-
             <div class="form-group">
-
-                <label>
-                    Membership Status
-                </label>
-
-                <select asp-for="IsActive"
-                        class="form-control">
-
-                    <option value="true">
-                        Active
-                    </option>
-
-                    <option value="false">
-                        Inactive
-                    </option>
-
+                <label asp-for="IsActive">Status</label>
+                <select asp-for="IsActive" class="form-control">
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
                 </select>
-
             </div>
-
 
             <div class="form-actions">
-
-                <button type="submit"
-                        class="btn-primary-custom">
-                    Save Changes
-                </button>
-
-                <a asp-action="Index"
-                   class="btn-light-custom">
-                    Cancel
-                </a>
-
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a asp-action="Index" class="btn btn-light">Cancel</a>
             </div>
-
         </form>
-
     </div>
 
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -6,6 +6,10 @@ using StudentOrganizationSystem.Models;
 
 namespace StudentOrganizationSystem.Controllers
 {
+    // Role policy (AUDIT.md P0.6, decision D3):
+    //   any signed-in user -> Index, Details and registering a new member;
+    //   Admin only         -> changing or (de)activating an existing member,
+    //                         because those actions change a member's status.
     [Authorize]
     public class MemberController : Controller
     {
@@ -67,7 +71,7 @@ namespace StudentOrganizationSystem.Controllers
         // POST: /Member/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Member member)
+        public async Task<IActionResult> Create([Bind("StudentID,FullName,Course,YearLevel")] Member member)
         {
             if (!ModelState.IsValid)
             {
@@ -95,7 +99,7 @@ namespace StudentOrganizationSystem.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] =
+            TempData["Success"] =
                 "Member successfully registered.";
 
             return RedirectToAction(nameof(Index));
@@ -104,6 +108,7 @@ namespace StudentOrganizationSystem.Controllers
 
         // GET: /Member/Edit/5
         [HttpGet]
+        [Authorize(Roles = AppRoles.Admin)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -126,9 +131,10 @@ namespace StudentOrganizationSystem.Controllers
         // POST: /Member/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppRoles.Admin)]
         public async Task<IActionResult> Edit(
             int id,
-            Member member)
+            [Bind("MemberID,StudentID,FullName,Course,YearLevel,IsActive")] Member member)
         {
             if (id != member.MemberID)
             {
@@ -173,7 +179,7 @@ namespace StudentOrganizationSystem.Controllers
 
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] =
+                TempData["Success"] =
                     "Member information successfully updated.";
             }
             catch (DbUpdateConcurrencyException)
@@ -216,6 +222,7 @@ namespace StudentOrganizationSystem.Controllers
         // POST: /Member/Deactivate/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppRoles.Admin)]
         public async Task<IActionResult> Deactivate(int id)
         {
             var member = await _context.Members
@@ -231,7 +238,7 @@ namespace StudentOrganizationSystem.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] =
+            TempData["Success"] =
                 "Member has been deactivated.";
 
             return RedirectToAction(nameof(Index));
@@ -241,6 +248,7 @@ namespace StudentOrganizationSystem.Controllers
         // POST: /Member/Activate/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppRoles.Admin)]
         public async Task<IActionResult> Activate(int id)
         {
             var member = await _context.Members
@@ -256,7 +264,7 @@ namespace StudentOrganizationSystem.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] =
+            TempData["Success"] =
                 "Member has been activated.";
 
             return RedirectToAction(nameof(Index));

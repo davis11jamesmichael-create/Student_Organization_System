@@ -1,109 +1,190 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+
+    var userName = User.Identity?.Name ?? "User";
+    var userInitial = string.IsNullOrWhiteSpace(userName)
+        ? "U"
+        : userName.Trim().Substring(0, 1).ToUpperInvariant();
+
+    var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+    if (string.IsNullOrWhiteSpace(userRole))
+    {
+        userRole = "User";
+    }
+
+    var pageTitle = ViewData["Title"]?.ToString() ?? "Dashboard";
+
+    Func<string, bool> isActive = controller =>
+        !string.IsNullOrEmpty(currentController) &&
+        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase);
+
+    Func<string, string> navClass = controller =>
+        isActive(controller) ? "nav-item active" : "nav-item";
+
+    Func<string, string> navAria = controller =>
+        isActive(controller) ? "page" : "false";
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0" />
-
-    <title>
-        @ViewData["Title"] - Student Organization System
-    </title>
-
-    <link rel="stylesheet"
-          href="~/css/site.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — Student Organization System</title>
+    <link rel="stylesheet" href="~/css/base.css" />
+    <link rel="stylesheet" href="~/css/sidebar.css" />
+    <link rel="stylesheet" href="~/css/navbar.css" />
+    <link rel="stylesheet" href="~/css/components.css" />
+    <link rel="stylesheet" href="~/css/forms.css" />
+    <link rel="stylesheet" href="~/css/tables.css" />
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+    <link rel="stylesheet" href="~/css/login.css" />
+    <link rel="stylesheet" href="~/css/attendance.css" />
+    <link rel="stylesheet" href="~/css/responsive.css" />
 </head>
-
 <body>
 
-    <header>
-        <nav class="navbar">
+@if (isAuthenticated)
+{
+    <div class="app-shell">
 
-            <div class="navbar-container">
+        <aside class="sidebar" id="appSidebar" aria-label="Main navigation">
 
-                <a class="brand"
-                   asp-controller="Home"
-                   asp-action="Index">
-                    Student Organization System
-                </a>
+            <a class="sidebar-brand" asp-controller="Home" asp-action="Index">
+                <span class="sidebar-brand-icon">🎓</span>
+                <span class="sidebar-brand-text">
+                    <span class="sidebar-brand-title">Student Org</span>
+                    <span class="sidebar-brand-sub">Management System</span>
+                </span>
+            </a>
 
-                <div class="nav-links">
+            <nav class="sidebar-nav">
 
-    <a asp-controller="Home"
-       asp-action="Index">
-        Home
-    </a>
+                <div class="nav-section">
+                    <span class="nav-section-title">Overview</span>
+                    <a class="@navClass("Home")" aria-current="@navAria("Home")"
+                       asp-controller="Home" asp-action="Index">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </div>
 
-    @if (User.Identity?.IsAuthenticated == true)
-    {
-        <a asp-controller="Member"
-   asp-action="Index">
-    Members
-</a>
+                <div class="nav-section">
+                    <span class="nav-section-title">Management</span>
+                    <a class="@navClass("Member")" aria-current="@navAria("Member")"
+                       asp-controller="Member" asp-action="Index">
+                        <span class="nav-icon">👥</span>
+                        <span class="nav-text">Members</span>
+                    </a>
+                    <a class="@navClass("Activity")" aria-current="@navAria("Activity")"
+                       asp-controller="Activity" asp-action="Index">
+                        <span class="nav-icon">📅</span>
+                        <span class="nav-text">Activities</span>
+                    </a>
+                    <a class="nav-item is-soon" href="#" tabindex="-1" aria-disabled="true">
+                        <span class="nav-icon">🪪</span>
+                        <span class="nav-text">Membership</span>
+                        <span class="nav-soon">Soon</span>
+                    </a>
+                </div>
 
-<a asp-controller="Activity" asp-action="Index">Activities</a>
+                <div class="nav-section">
+                    <span class="nav-section-title">Tracking</span>
+                    <a class="@navClass("Attendance")" aria-current="@navAria("Attendance")"
+                       asp-controller="Attendance" asp-action="Index">
+                        <span class="nav-icon">📋</span>
+                        <span class="nav-text">Attendance</span>
+                    </a>
+                    <a class="nav-item is-soon" href="#" tabindex="-1" aria-disabled="true">
+                        <span class="nav-icon">🏅</span>
+                        <span class="nav-text">Participation</span>
+                        <span class="nav-soon">Soon</span>
+                    </a>
+                </div>
 
-        <a href="#">
-            Attendance
-        </a>
+                <div class="nav-section">
+                    <span class="nav-section-title">Insights</span>
+                    <a class="nav-item is-soon" href="#" tabindex="-1" aria-disabled="true">
+                        <span class="nav-icon">📈</span>
+                        <span class="nav-text">Reports</span>
+                        <span class="nav-soon">Soon</span>
+                    </a>
+                </div>
 
-        <a href="#">
-            Reports
-        </a>
+            </nav>
 
-        <form asp-controller="Account"
-              asp-action="Logout"
-              method="post"
-              style="display:inline;">
-
-            @Html.AntiForgeryToken()
-
-            <button type="submit"
-                    class="nav-logout">
-                Logout
-            </button>
-
-        </form>
-    }
-    else
-    {
-        <a asp-controller="Account"
-           asp-action="Login">
-            Login
-        </a>
-    }
-
-</div>
-
+            <div class="sidebar-footer">
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="sidebar-signout">
+                        <span aria-hidden="true">⏻</span>
+                        Sign out
+                    </button>
+                </form>
+                <p class="sidebar-note">&copy; @DateTime.Now.Year Student Org System</p>
             </div>
 
-        </nav>
-    </header>
+        </aside>
 
+        <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
+        <div class="app-main">
+
+            <header class="topbar">
+
+                <button type="button" class="icon-btn topbar-toggle"
+                        id="sidebarToggle"
+                        aria-label="Toggle navigation menu"
+                        aria-controls="appSidebar"
+                        aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
+                <div class="topbar-title">
+                    <h1>@pageTitle</h1>
+                    <span>@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
+                </div>
+
+                <div class="topbar-actions">
+                    <div class="topbar-user">
+                        <span class="avatar avatar-sm">@userInitial</span>
+                        <span class="topbar-user-text">
+                            <span class="topbar-user-name">@userName</span>
+                            <span class="topbar-user-role">@userRole</span>
+                        </span>
+                    </div>
+                </div>
+
+            </header>
+
+            <main class="app-content">
+                @RenderBody()
+            </main>
+
+            <footer class="footer">
+                <p>&copy; @DateTime.Now.Year &nbsp;Student Organization Management System</p>
+            </footer>
+
+        </div>
+
+    </div>
+}
+else
+{
     <main class="main-content">
-
         @RenderBody()
-
     </main>
 
-
     <footer class="footer">
-
-        <p>
-            &copy; @DateTime.Now.Year
-            Student Organization Management System
-        </p>
-
+        <p>&copy; @DateTime.Now.Year &nbsp;Student Organization Management System</p>
     </footer>
+}
 
-
-    <script src="~/js/site.js"></script>
-
-    @await RenderSectionAsync(
-        "Scripts",
-        required: false
-    )
+<script src="~/js/site.js"></script>
+@await RenderSectionAsync("Scripts", required: false)
 
 </body>
 </html>
