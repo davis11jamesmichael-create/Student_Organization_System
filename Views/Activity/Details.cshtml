@@ -4,6 +4,10 @@
     ViewData["Title"] = "Activity Details";
 
     var isAdmin = User.IsInRole(AppRoles.Admin);
+
+    // The status is derived from the date + time + cancel flag (see ActivityStatus).
+    var status = ActivityStatus.For(Model);
+    var schedule = Model.StartTime.ToString("hh\\:mm") + " – " + Model.EndTime.ToString("hh\\:mm");
 }
 
 <div class="form-container">
@@ -29,8 +33,20 @@
         </div>
 
         <div class="details-row">
+            <span class="details-label">Time</span>
+            <span class="details-value">@schedule</span>
+        </div>
+
+        <div class="details-row">
             <span class="details-label">Location</span>
             <span class="details-value">@Model.Location</span>
+        </div>
+
+        <div class="details-row">
+            <span class="details-label">Faculty / Instructor</span>
+            <span class="details-value">
+                @(string.IsNullOrWhiteSpace(Model.FacultyInCharge) ? "—" : Model.FacultyInCharge)
+            </span>
         </div>
 
         <div class="details-row">
@@ -43,10 +59,7 @@
         <div class="details-row">
             <span class="details-label">Status</span>
             <span class="details-value">
-                @if (Model.IsActive)
-                { <span class="badge badge-active">Active</span> }
-                else
-                { <span class="badge badge-inactive">Inactive</span> }
+                <span class="badge @ActivityStatus.BadgeClass(status)">@status</span>
             </span>
         </div>
 

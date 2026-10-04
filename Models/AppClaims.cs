@@ -13,5 +13,12 @@ namespace StudentOrganizationSystem.Models
         /// query to "my own records" without trusting anything from the request.
         /// </summary>
         public const string MemberId = "MemberID";
+
+        /// <summary>
+        /// The web-root-relative path to the user's profile picture, when one has
+        /// been uploaded. Written into the cookie so the top bar can show the
+        /// picture without a database round trip on every page.
+        /// </summary>
+        public const string AvatarPath = "AvatarPath";
     }
 }

@@ -50,8 +50,11 @@ namespace StudentOrganizationSystem.Controllers
             return View(member);
         }
 
-        // GET: /Portal/Attendance
-        public async Task<IActionResult> Attendance()
+        // GET: /Portal/History
+        // One combined table for attendance AND participation: the two records are
+        // keyed by the same activity, so a row shows the participation type and the
+        // attendance status together (module 4a).
+        public async Task<IActionResult> History()
         {
             var member = await GetCurrentMemberAsync();
 
@@ -60,38 +63,21 @@ namespace StudentOrganizationSystem.Controllers
                 return View("NotLinked");
             }
 
-            var records = await _context.Attendances
+            var attendances = await _context.Attendances
                 .AsNoTracking()
                 .Include(a => a.Activity)
                 .Where(a => a.MemberID == member.MemberID)
-                .OrderByDescending(a => a.RecordedAt)
                 .ToListAsync();
 
-            ViewBag.Member = member;
-
-            return View(records);
-        }
-
-        // GET: /Portal/Participation
-        public async Task<IActionResult> Participation()
-        {
-            var member = await GetCurrentMemberAsync();
-
-            if (member == null)
-            {
-                return View("NotLinked");
-            }
-
-            var records = await _context.Participations
+            var participations = await _context.Participations
                 .AsNoTracking()
                 .Include(p => p.Activity)
                 .Where(p => p.MemberID == member.MemberID)
-                .OrderByDescending(p => p.RecordedAt)
                 .ToListAsync();
 
             ViewBag.Member = member;
 
-            return View(records);
+            return View(MemberRecords.Combine(attendances, participations));
         }
 
         /// <summary>

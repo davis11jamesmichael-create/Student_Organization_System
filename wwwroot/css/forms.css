@@ -65,6 +65,40 @@ select.form-control {
     cursor: pointer;
 }
 
+/* ── Password field with a show / hide toggle ── */
+
+.password-field {
+    position: relative;
+}
+
+.password-field .form-control {
+    padding-right: 64px;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    padding: 4px 9px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--gray-500);
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    transition: color var(--transition), background var(--transition);
+}
+
+.password-toggle:hover {
+    color: var(--primary);
+    background: var(--gray-100);
+}
+
 /* ── Form actions ── */
 
 .form-actions {

@@ -233,6 +233,21 @@
     color: var(--gray-400);
 }
 
+/* The "Create an account" / "Log in" link on the note line. Without this it
+   inherits the muted note colour and reads like plain text. */
+.login-note a {
+    color: var(--primary-dark);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color var(--transition);
+}
+
+.login-note a:hover {
+    color: var(--primary);
+    text-decoration-thickness: 2px;
+}
+
 /* ── Preview strip under the card (small screens only) ── */
 
 .login-mobile-brand {

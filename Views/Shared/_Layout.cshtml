@@ -1,5 +1,6 @@
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
 
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
 
@@ -8,11 +9,8 @@
         ? "U"
         : userName.Trim().Substring(0, 1).ToUpperInvariant();
 
-    var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-    if (string.IsNullOrWhiteSpace(userRole))
-    {
-        userRole = "User";
-    }
+    // Carried in the cookie (see UserClaims), so the top bar needs no DB lookup.
+    var userAvatar = User.FindFirst(AppClaims.AvatarPath)?.Value;
 
     // Role split (AUDIT.md P0.6): Admins additionally see the "Administration"
     // group. A "Member" login gets its own reduced navigation, because it cannot
@@ -22,15 +20,18 @@
 
     var pageTitle = ViewData["Title"]?.ToString() ?? "Dashboard";
 
-    Func<string, bool> isActive = controller =>
-        !string.IsNullOrEmpty(currentController) &&
-        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase);
+    // Highlight on BOTH the controller and the action, so the Portal's three
+    // entries (My Records / My Attendance / My Participation) each light up on
+    // their own page instead of every one of them sharing "My Records".
+    Func<string, string, bool> isActive = (controller, action) =>
+        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase);
 
-    Func<string, string> navClass = controller =>
-        isActive(controller) ? "nav-item active" : "nav-item";
+    Func<string, string, string> navClass = (controller, action) =>
+        isActive(controller, action) ? "nav-item active" : "nav-item";
 
-    Func<string, string?> navAria = controller =>
-        isActive(controller) ? "page" : null;
+    Func<string, string, string?> navAria = (controller, action) =>
+        isActive(controller, action) ? "page" : null;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -77,18 +78,15 @@
                        the pages they can actually open. *@
                     <div class="nav-section">
                         <span class="nav-section-title">My Records</span>
-                        <a class="@navClass("Portal")" aria-current="@navAria("Portal")"
+                        <a class="@navClass("Portal", "Index")" aria-current="@navAria("Portal", "Index")"
                            asp-controller="Portal" asp-action="Index">
                             <span class="nav-icon">🧾</span>
                             <span class="nav-text">My Records</span>
                         </a>
-                        <a class="nav-item" asp-controller="Portal" asp-action="Attendance">
+                        <a class="@navClass("Portal", "History")" aria-current="@navAria("Portal", "History")"
+                           asp-controller="Portal" asp-action="History">
                             <span class="nav-icon">📋</span>
-                            <span class="nav-text">My Attendance</span>
-                        </a>
-                        <a class="nav-item" asp-controller="Portal" asp-action="Participation">
-                            <span class="nav-icon">🏅</span>
-                            <span class="nav-text">My Participation</span>
+                            <span class="nav-text">My Attendance &amp; Participation</span>
                         </a>
                     </div>
                 }
@@ -96,79 +94,66 @@
                 {
                     <div class="nav-section">
                         <span class="nav-section-title">Overview</span>
-                        <a class="@navClass("Home")" aria-current="@navAria("Home")"
+                        <a class="@navClass("Home", "Index")" aria-current="@navAria("Home", "Index")"
                            asp-controller="Home" asp-action="Index">
                             <span class="nav-icon">📊</span>
                             <span class="nav-text">Dashboard</span>
                         </a>
-                        <a class="@navClass("Search")" aria-current="@navAria("Search")"
-                           asp-controller="Search" asp-action="Index">
-                            <span class="nav-icon">🔍</span>
-                            <span class="nav-text">Search</span>
-                        </a>
                     </div>
 
-                <div class="nav-section">
-                    <span class="nav-section-title">Management</span>
-                    <a class="@navClass("Member")" aria-current="@navAria("Member")"
-                       asp-controller="Member" asp-action="Index">
-                        <span class="nav-icon">👥</span>
-                        <span class="nav-text">Members</span>
-                    </a>
-                    <a class="@navClass("Activity")" aria-current="@navAria("Activity")"
-                       asp-controller="Activity" asp-action="Index">
-                        <span class="nav-icon">📅</span>
-                        <span class="nav-text">Activities</span>
-                    </a>
-                    <a class="@navClass("Membership")" aria-current="@navAria("Membership")"
-                       asp-controller="Membership" asp-action="Index">
-                        <span class="nav-icon">🪪</span>
-                        <span class="nav-text">Membership</span>
-                    </a>
-                </div>
-
-                @if (isAdmin)
-                {
                     <div class="nav-section">
-                        <span class="nav-section-title">Administration</span>
-                        <a class="nav-item" asp-controller="Member" asp-action="Create">
-                            <span class="nav-icon">➕</span>
-                            <span class="nav-text">Add Member</span>
+                        <span class="nav-section-title">Management</span>
+                        <a class="@navClass("Member", "Index")" aria-current="@navAria("Member", "Index")"
+                           asp-controller="Member" asp-action="Index">
+                            <span class="nav-icon">👥</span>
+                            <span class="nav-text">Members</span>
                         </a>
-                        <a class="nav-item" asp-controller="Activity" asp-action="Create">
-                            <span class="nav-icon">🗓️</span>
-                            <span class="nav-text">Add Activity</span>
+                        <a class="@navClass("Activity", "Index")" aria-current="@navAria("Activity", "Index")"
+                           asp-controller="Activity" asp-action="Index">
+                            <span class="nav-icon">📅</span>
+                            <span class="nav-text">Activities</span>
                         </a>
-                        <a class="@navClass("User")" aria-current="@navAria("User")"
-                           asp-controller="User" asp-action="Index">
-                            <span class="nav-icon">🔑</span>
-                            <span class="nav-text">Users &amp; Roles</span>
+                        <a class="@navClass("Membership", "Index")" aria-current="@navAria("Membership", "Index")"
+                           asp-controller="Membership" asp-action="Index">
+                            <span class="nav-icon">🪪</span>
+                            <span class="nav-text">Membership</span>
                         </a>
                     </div>
-                }
 
-                <div class="nav-section">
-                    <span class="nav-section-title">Tracking</span>
-                    <a class="@navClass("Attendance")" aria-current="@navAria("Attendance")"
-                       asp-controller="Attendance" asp-action="Index">
-                        <span class="nav-icon">📋</span>
-                        <span class="nav-text">Attendance</span>
-                    </a>
-                    <a class="@navClass("Participation")" aria-current="@navAria("Participation")"
-                       asp-controller="Participation" asp-action="Index">
-                        <span class="nav-icon">🏅</span>
-                        <span class="nav-text">Participation</span>
-                    </a>
-                </div>
+                    @if (isAdmin)
+                    {
+                        <div class="nav-section">
+                            <span class="nav-section-title">Administration</span>
+                            <a class="@navClass("User", "Index")" aria-current="@navAria("User", "Index")"
+                               asp-controller="User" asp-action="Index">
+                                <span class="nav-icon">🔑</span>
+                                <span class="nav-text">Users &amp; Roles</span>
+                            </a>
+                        </div>
+                    }
 
-                <div class="nav-section">
-                    <span class="nav-section-title">Insights</span>
-                    <a class="@navClass("Reports")" aria-current="@navAria("Reports")"
-                       asp-controller="Reports" asp-action="Index">
-                        <span class="nav-icon">📈</span>
-                        <span class="nav-text">Reports</span>
-                    </a>
-                </div>
+                    <div class="nav-section">
+                        <span class="nav-section-title">Tracking</span>
+                        <a class="@navClass("Attendance", "Index")" aria-current="@navAria("Attendance", "Index")"
+                           asp-controller="Attendance" asp-action="Index">
+                            <span class="nav-icon">📋</span>
+                            <span class="nav-text">Attendance</span>
+                        </a>
+                        <a class="@navClass("Participation", "Index")" aria-current="@navAria("Participation", "Index")"
+                           asp-controller="Participation" asp-action="Index">
+                            <span class="nav-icon">🏅</span>
+                            <span class="nav-text">Participation</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-section">
+                        <span class="nav-section-title">Insights</span>
+                        <a class="@navClass("Reports", "Index")" aria-current="@navAria("Reports", "Index")"
+                           asp-controller="Reports" asp-action="Index">
+                            <span class="nav-icon">📈</span>
+                            <span class="nav-text">Reports</span>
+                        </a>
+                    </div>
                 }
 
             </nav>
@@ -182,7 +167,7 @@
                     @Html.AntiForgeryToken()
                     <button type="submit" class="sidebar-signout">
                         <span aria-hidden="true">⏻</span>
-                        Sign out
+                        Logout
                     </button>
                 </form>
                 <p class="sidebar-note">&copy; @DateTime.Now.Year Student Org System</p>
@@ -218,8 +203,17 @@
                 </form>
 
                 <div class="topbar-actions">
-                    <div class="topbar-user">
-                        <span class="avatar avatar-sm">@userInitial</span>
+                    <a class="topbar-user" asp-controller="Profile" asp-action="Index"
+                       title="My profile">
+                        @if (!string.IsNullOrWhiteSpace(userAvatar))
+                        {
+                            <img class="avatar avatar-sm avatar-image" src="@userAvatar"
+                                 alt="Profile picture of @userName" />
+                        }
+                        else
+                        {
+                            <span class="avatar avatar-sm">@userInitial</span>
+                        }
                         <span class="topbar-user-text">
                             <span class="topbar-user-name">
                                 @userName
@@ -236,9 +230,8 @@
                                     <span class="badge-role badge-officer">Officer</span>
                                 }
                             </span>
-                            <span class="topbar-user-role">@userRole</span>
                         </span>
-                    </div>
+                    </a>
                 </div>
 
             </header>

@@ -10,7 +10,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sign in — Student Organization System</title>
+    <title>Login — Student Organization System</title>
     <link rel="stylesheet" href="~/css/base.css" />
     <link rel="stylesheet" href="~/css/components.css" />
     <link rel="stylesheet" href="~/css/forms.css" />
@@ -78,7 +78,7 @@
                 <div class="login-head">
                     <div class="login-logo">🎓</div>
                     <h1>Welcome back</h1>
-                    <p>Sign in to continue to your dashboard.</p>
+                    <p>Log in to continue to your dashboard.</p>
                 </div>
 
                 <form asp-action="Login" asp-controller="Account" method="post">
@@ -100,9 +100,14 @@
 
                     <div class="form-group">
                         <label asp-for="Password">Password</label>
-                        <input asp-for="Password" class="form-control"
-                               placeholder="Enter your password"
-                               autocomplete="current-password" />
+                        <div class="password-field">
+                            <input asp-for="Password" class="form-control"
+                                   placeholder="Enter your password"
+                                   autocomplete="current-password" />
+                            <button type="button" class="password-toggle"
+                                    data-toggle-password
+                                    aria-label="Show password" aria-pressed="false">Show</button>
+                        </div>
                         <span asp-validation-for="Password" class="validation-message"></span>
                     </div>
 
@@ -111,7 +116,7 @@
                         Keep me signed in
                     </label>
 
-                    <button type="submit" class="login-btn">Sign in</button>
+                    <button type="submit" class="login-btn">Login</button>
 
                 </form>
 
@@ -136,6 +141,7 @@
 </div>
 
 <partial name="_ValidationScriptsPartial" />
+<script src="~/js/site.js"></script>
 
 </body>
 </html>

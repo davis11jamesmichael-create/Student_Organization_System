@@ -60,6 +60,16 @@
     background: var(--white);
 }
 
+/* The chip links to /Profile, so give it a hover/focus cue. */
+a.topbar-user {
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+a.topbar-user:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
 .topbar-user-text {
     display: flex;
     flex-direction: column;

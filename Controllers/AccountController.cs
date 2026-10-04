@@ -69,7 +69,7 @@ namespace StudentOrganizationSystem.Controllers
             {
                 ModelState.AddModelError(
                     "",
-                    "Too many failed sign-in attempts. Please wait a few "
+                    "Too many failed log-in attempts. Please wait a few "
                         + "minutes before trying again.");
 
                 return View(model);
@@ -141,37 +141,10 @@ namespace StudentOrganizationSystem.Controllers
             // username + address pair.
             _attemptTracker.Reset(attemptKey);
 
-            var claims = new List<Claim>
-            {
-                new Claim(
-                    ClaimTypes.NameIdentifier,
-                    user.UserID.ToString()),
-
-                new Claim(
-                    ClaimTypes.Name,
-                    user.Username),
-
-                new Claim(
-                    ClaimTypes.Role,
-                    user.Role?.RoleName ?? "")
-            };
-
-            // Only Member accounts point at a Members row. PortalController reads
-            // this claim to scope every query to the signed-in member's own
-            // records, so the id comes from the database, never from the request.
-            if (user.MemberID.HasValue)
-            {
-                claims.Add(new Claim(
-                    AppClaims.MemberId,
-                    user.MemberID.Value.ToString()));
-            }
-
-            var identity = new ClaimsIdentity(
-                claims,
-                CookieAuthenticationDefaults.AuthenticationScheme);
-
-            var principal =
-                new ClaimsPrincipal(identity);
+            // The claim set (identity, role, member link and avatar) is built in
+            // one place so ProfileController can re-issue the same cookie after an
+            // avatar change.
+            var principal = UserClaims.Build(user);
 
             var authenticationProperties =
                 new AuthenticationProperties

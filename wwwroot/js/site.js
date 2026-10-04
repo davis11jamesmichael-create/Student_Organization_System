@@ -189,6 +189,27 @@
             });
         }
 
+        /* ── Show / hide password fields (data-toggle-password) ── */
+        var passwordToggles = document.querySelectorAll("[data-toggle-password]");
+
+        for (var p = 0; p < passwordToggles.length; p++) {
+            passwordToggles[p].addEventListener("click", function () {
+                var field = this.closest(".password-field");
+                var input = field ? field.querySelector("input") : null;
+
+                if (!input) { return; }
+
+                var isHidden = input.type === "password";
+
+                input.type = isHidden ? "text" : "password";
+                this.textContent = isHidden ? "Hide" : "Show";
+                this.setAttribute("aria-pressed", isHidden ? "true" : "false");
+                this.setAttribute(
+                    "aria-label",
+                    isHidden ? "Hide password" : "Show password");
+            });
+        }
+
         /* ── Any POST form may ask for confirmation with data-confirm="..." ── */
         document.addEventListener("submit", function (event) {
             var form = event.target;

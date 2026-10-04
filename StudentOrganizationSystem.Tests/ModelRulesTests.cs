@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Caching.Memory;
 using StudentOrganizationSystem.Models;
 using StudentOrganizationSystem.Services;
@@ -204,5 +205,182 @@ public class ModelRulesTests
 
         Assert.False(pager.RouteValues.ContainsKey("search"));
         Assert.Equal("Active", pager.RouteValues["status"]);
+    }
+
+    [Fact]
+    public void ActivityStatus_is_derived_from_the_clock()
+    {
+        var activity = new Activity
+        {
+            ActivityDate = new DateTime(2024, 6, 1),
+            StartTime = new TimeSpan(9, 0, 0),
+            EndTime = new TimeSpan(17, 0, 0),
+            IsActive = true
+        };
+
+        // Before the start.
+        Assert.Equal(ActivityStatus.Upcoming,
+            ActivityStatus.For(activity, new DateTime(2024, 6, 1, 8, 59, 0)));
+
+        // On the start and end boundaries (inclusive), and in between: Ongoing.
+        Assert.Equal(ActivityStatus.Ongoing,
+            ActivityStatus.For(activity, new DateTime(2024, 6, 1, 9, 0, 0)));
+        Assert.Equal(ActivityStatus.Ongoing,
+            ActivityStatus.For(activity, new DateTime(2024, 6, 1, 12, 0, 0)));
+        Assert.Equal(ActivityStatus.Ongoing,
+            ActivityStatus.For(activity, new DateTime(2024, 6, 1, 17, 0, 0)));
+
+        // After the end.
+        Assert.Equal(ActivityStatus.Finished,
+            ActivityStatus.For(activity, new DateTime(2024, 6, 1, 17, 0, 1)));
+    }
+
+    [Fact]
+    public void ActivityStatus_cancel_flag_wins_over_the_clock()
+    {
+        var activity = new Activity
+        {
+            ActivityDate = new DateTime(2024, 6, 1),
+            StartTime = new TimeSpan(9, 0, 0),
+            EndTime = new TimeSpan(17, 0, 0),
+            IsActive = false
+        };
+
+        // Even while the clock says "Ongoing", a cancelled activity reads Cancelled.
+        Assert.Equal(ActivityStatus.Cancelled,
+            ActivityStatus.For(activity, new DateTime(2024, 6, 1, 12, 0, 0)));
+    }
+
+    [Fact]
+    public void ActivityStatus_filter_and_badge_values_are_known()
+    {
+        Assert.True(ActivityStatus.IsFilterable(ActivityStatus.Upcoming));
+        Assert.True(ActivityStatus.IsFilterable(ActivityStatus.Ongoing));
+        Assert.True(ActivityStatus.IsFilterable(ActivityStatus.Cancelled));
+        Assert.True(ActivityStatus.IsFilterable(ActivityStatus.Finished));
+
+        // The old Active/Inactive words are no longer valid filters.
+        Assert.False(ActivityStatus.IsFilterable("Active"));
+        Assert.False(ActivityStatus.IsFilterable("Inactive"));
+        Assert.False(ActivityStatus.IsFilterable(null));
+
+        Assert.Equal("badge-upcoming", ActivityStatus.BadgeClass(ActivityStatus.Upcoming));
+        Assert.Equal("badge-ongoing", ActivityStatus.BadgeClass(ActivityStatus.Ongoing));
+        Assert.Equal("badge-cancelled", ActivityStatus.BadgeClass(ActivityStatus.Cancelled));
+        Assert.Equal("badge-finished", ActivityStatus.BadgeClass(ActivityStatus.Finished));
+    }
+
+    [Fact]
+    public void Activity_rejects_an_end_time_before_the_start()
+    {
+        var activity = new Activity
+        {
+            ActivityTitle = "Bad schedule",
+            Location = "Hall",
+            StartTime = new TimeSpan(15, 0, 0),
+            EndTime = new TimeSpan(14, 0, 0)
+        };
+
+        var results = new List<ValidationResult>();
+        var valid = Validator.TryValidateObject(
+            activity,
+            new ValidationContext(activity),
+            results,
+            validateAllProperties: true);
+
+        Assert.False(valid);
+        Assert.Contains(results, r => r.MemberNames.Contains(nameof(Activity.EndTime)));
+    }
+
+    [Fact]
+    public void MemberRecords_combine_attendance_and_participation_into_one_row()
+    {
+        var activity = new Activity
+        {
+            ActivityID = 1,
+            ActivityTitle = "General Assembly",
+            ActivityDate = new DateTime(2024, 6, 1),
+            Location = "Hall"
+        };
+
+        var attendance = new Attendance
+        {
+            ActivityID = 1,
+            MemberID = 1,
+            Status = "Present",
+            RecordedAt = new DateTime(2024, 6, 1, 12, 0, 0),
+            Activity = activity
+        };
+
+        var participation = new Participation
+        {
+            ActivityID = 1,
+            MemberID = 1,
+            ParticipationType = "Organizer",
+            RecordedAt = new DateTime(2024, 6, 1, 9, 0, 0),
+            Activity = activity
+        };
+
+        var row = Assert.Single(MemberRecords.Combine(
+            new[] { attendance },
+            new[] { participation }));
+
+        Assert.Equal("General Assembly", row.ActivityTitle);
+        Assert.Equal("Organizer", row.ParticipationType);
+        Assert.Equal("Present", row.AttendanceStatus);
+
+        // "Recorded" is the later of the two saves.
+        Assert.Equal(new DateTime(2024, 6, 1, 12, 0, 0), row.RecordedAt);
+    }
+
+    [Fact]
+    public void MemberRecords_keep_a_row_when_only_one_side_exists()
+    {
+        var assembly = new Activity
+        {
+            ActivityID = 1,
+            ActivityTitle = "Assembly",
+            ActivityDate = new DateTime(2024, 6, 1)
+        };
+
+        var cleanup = new Activity
+        {
+            ActivityID = 2,
+            ActivityTitle = "Cleanup Drive",
+            ActivityDate = new DateTime(2024, 6, 8)
+        };
+
+        var attendance = new Attendance
+        {
+            ActivityID = 1,
+            MemberID = 1,
+            Status = "Absent",
+            RecordedAt = new DateTime(2024, 6, 1),
+            Activity = assembly
+        };
+
+        var participation = new Participation
+        {
+            ActivityID = 2,
+            MemberID = 1,
+            ParticipationType = "Volunteer",
+            RecordedAt = new DateTime(2024, 6, 8),
+            Activity = cleanup
+        };
+
+        var rows = MemberRecords.Combine(new[] { attendance }, new[] { participation });
+
+        Assert.Equal(2, rows.Count);
+
+        // Newest activity first.
+        Assert.Equal(2, rows[0].ActivityID);
+
+        var withAttendance = rows.Single(r => r.ActivityID == 1);
+        Assert.Equal("Absent", withAttendance.AttendanceStatus);
+        Assert.Null(withAttendance.ParticipationType);
+
+        var withParticipation = rows.Single(r => r.ActivityID == 2);
+        Assert.Equal("Volunteer", withParticipation.ParticipationType);
+        Assert.Null(withParticipation.AttendanceStatus);
     }
 }

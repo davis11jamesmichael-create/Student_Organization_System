@@ -49,15 +49,16 @@
                 <label>Status</label>
                 <select name="status">
                     <option value="">All</option>
-                    @if (ViewBag.Status == "Active") {
-                        <option value="Active" selected>Active</option>
-                        <option value="Inactive">Inactive</option>
-                    } else if (ViewBag.Status == "Inactive") {
-                        <option value="Active">Active</option>
-                        <option value="Inactive" selected>Inactive</option>
-                    } else {
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
+                    @foreach (var option in ActivityStatus.Filterable)
+                    {
+                        if (ViewBag.Status == option)
+                        {
+                            <option value="@option" selected>@option</option>
+                        }
+                        else
+                        {
+                            <option value="@option">@option</option>
+                        }
                     }
                 </select>
             </div>
@@ -94,15 +95,18 @@
                     <tbody>
                         @foreach (var a in Model)
                         {
+                            var status = ActivityStatus.For(a);
+                            var schedule = a.StartTime.ToString("hh\\:mm") + " – "
+                                + a.EndTime.ToString("hh\\:mm");
                             <tr>
                                 <td><strong>@a.ActivityTitle</strong></td>
-                                <td>@a.ActivityDate.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    @a.ActivityDate.ToString("MMM dd, yyyy")
+                                    <div class="hint-cell">@schedule</div>
+                                </td>
                                 <td>@a.Location</td>
                                 <td>
-                                    @if (a.IsActive)
-                                    { <span class="badge badge-active">Active</span> }
-                                    else
-                                    { <span class="badge badge-inactive">Inactive</span> }
+                                    <span class="badge @ActivityStatus.BadgeClass(status)">@status</span>
                                 </td>
                                 <td>
                                     <div class="action-group">

@@ -107,9 +107,9 @@ namespace StudentOrganizationSystem.Data
 
             var activities = new List<Activity>
             {
-                new Activity { ActivityTitle = "General Assembly", ActivityDate = DateTime.Today.AddDays(-21), Location = "Main Auditorium", Description = "Start-of-term orientation for all members.", IsActive = true, CreatedAt = DateTime.Now },
-                new Activity { ActivityTitle = "Coding Bootcamp", ActivityDate = DateTime.Today.AddDays(-7), Location = "Computer Lab 2", Description = "Hands-on session for first and second years.", IsActive = true, CreatedAt = DateTime.Now },
-                new Activity { ActivityTitle = "Outreach Program", ActivityDate = DateTime.Today.AddDays(14), Location = "Barangay Hall", Description = "Community outreach (upcoming).", IsActive = true, CreatedAt = DateTime.Now }
+                new Activity { ActivityTitle = "General Assembly", ActivityDate = DateTime.Today.AddDays(-21), StartTime = new TimeSpan(8, 0, 0), EndTime = new TimeSpan(12, 0, 0), Location = "Main Auditorium", Description = "Start-of-term orientation for all members.", FacultyInCharge = "Prof. Maria Santos", IsActive = true, CreatedAt = DateTime.Now },
+                new Activity { ActivityTitle = "Coding Bootcamp", ActivityDate = DateTime.Today.AddDays(-7), StartTime = new TimeSpan(13, 0, 0), EndTime = new TimeSpan(17, 0, 0), Location = "Computer Lab 2", Description = "Hands-on session for first and second years.", FacultyInCharge = "Engr. Ramon Cruz", IsActive = true, CreatedAt = DateTime.Now },
+                new Activity { ActivityTitle = "Outreach Program", ActivityDate = DateTime.Today.AddDays(14), StartTime = new TimeSpan(8, 0, 0), EndTime = new TimeSpan(11, 0, 0), Location = "Barangay Hall", Description = "Community outreach (upcoming).", FacultyInCharge = "Prof. Ana Reyes", IsActive = true, CreatedAt = DateTime.Now }
             };
 
             context.Activities.AddRange(activities);

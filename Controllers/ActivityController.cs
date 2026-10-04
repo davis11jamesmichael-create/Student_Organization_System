@@ -49,27 +49,37 @@ namespace StudentOrganizationSystem.Controllers
                     a.ActivityDate.Date == activityDate.Value.Date);
             }
 
-            // Filter Active / Inactive
-            if (!string.IsNullOrWhiteSpace(status))
+            // The status is derived from the clock (date + start/end time + the
+            // cancel flag), which has no portable SQL predicate. The activity list
+            // is small, so the matching rows are materialised once and the ordering
+            // (SQLite cannot ORDER BY a TimeSpan), the status filter and paging all
+            // run in memory.
+            var rows = await query.ToListAsync();
+
+            rows = rows
+                .OrderByDescending(a => a.ActivityDate)
+                .ThenByDescending(a => a.StartTime)
+                .ToList();
+
+            // Whitelist the status the same way the other lists do, so a
+            // hand-edited ?status=... cannot produce a bogus empty page.
+            var statusOption = ActivityStatus.IsFilterable(status)
+                ? status
+                : null;
+
+            if (statusOption != null)
             {
-                if (status == "Active")
-                {
-                    query = query.Where(a => a.IsActive);
-                }
-                else if (status == "Inactive")
-                {
-                    query = query.Where(a => !a.IsActive);
-                }
+                rows = rows
+                    .Where(a => ActivityStatus.For(a) == statusOption)
+                    .ToList();
             }
 
             // P3: one page at a time, with the filters carried into the pager.
-            var paged = await Paging.ToPagedAsync(
-                query.OrderByDescending(a => a.ActivityDate),
-                page);
+            var paged = Paging.ToPaged(rows, page);
 
             ViewBag.Search = search;
             ViewBag.ActivityDate = activityDate?.ToString("yyyy-MM-dd");
-            ViewBag.Status = status;
+            ViewBag.Status = statusOption;
             ViewBag.Pager = paged.ToPager(
                 "Activity",
                 "Index",
@@ -77,7 +87,7 @@ namespace StudentOrganizationSystem.Controllers
                 {
                     ["search"] = search ?? string.Empty,
                     ["activityDate"] = activityDate?.ToString("yyyy-MM-dd") ?? string.Empty,
-                    ["status"] = status ?? string.Empty
+                    ["status"] = statusOption ?? string.Empty
                 });
 
             return View(paged.Items);
@@ -97,13 +107,16 @@ namespace StudentOrganizationSystem.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = AppRoles.Admin)]
-        public async Task<IActionResult> Create([Bind("ActivityTitle,ActivityDate,Location,Description")] Activity activity)
+        public async Task<IActionResult> Create([Bind("ActivityTitle,ActivityDate,StartTime,EndTime,Location,Description,FacultyInCharge")] Activity activity)
         {
             // P1.6: trim before validating and saving, so "  Quiz Bee  " and
             // "Quiz Bee" never become two different activities.
             activity.ActivityTitle = (activity.ActivityTitle ?? string.Empty).Trim();
             activity.Location = (activity.Location ?? string.Empty).Trim();
             activity.Description = activity.Description?.Trim();
+            activity.FacultyInCharge = string.IsNullOrWhiteSpace(activity.FacultyInCharge)
+                ? null
+                : activity.FacultyInCharge.Trim();
 
             // Re-validate the cleaned values (the binder saw the untrimmed text).
             ModelState.Clear();
@@ -154,7 +167,7 @@ namespace StudentOrganizationSystem.Controllers
         [Authorize(Roles = AppRoles.Admin)]
         public async Task<IActionResult> Edit(
             int id,
-            [Bind("ActivityID,ActivityTitle,ActivityDate,Location,Description,IsActive")] Activity activity)
+            [Bind("ActivityID,ActivityTitle,ActivityDate,StartTime,EndTime,Location,Description,FacultyInCharge,IsActive")] Activity activity)
         {
             if (id != activity.ActivityID)
             {
@@ -165,6 +178,9 @@ namespace StudentOrganizationSystem.Controllers
             activity.ActivityTitle = (activity.ActivityTitle ?? string.Empty).Trim();
             activity.Location = (activity.Location ?? string.Empty).Trim();
             activity.Description = activity.Description?.Trim();
+            activity.FacultyInCharge = string.IsNullOrWhiteSpace(activity.FacultyInCharge)
+                ? null
+                : activity.FacultyInCharge.Trim();
 
             ModelState.Clear();
             TryValidateModel(activity);
@@ -184,8 +200,11 @@ namespace StudentOrganizationSystem.Controllers
 
             existingActivity.ActivityTitle = activity.ActivityTitle;
             existingActivity.ActivityDate = activity.ActivityDate;
+            existingActivity.StartTime = activity.StartTime;
+            existingActivity.EndTime = activity.EndTime;
             existingActivity.Location = activity.Location;
             existingActivity.Description = activity.Description;
+            existingActivity.FacultyInCharge = activity.FacultyInCharge;
             existingActivity.IsActive = activity.IsActive;
             existingActivity.UpdatedAt = DateTime.Now;
 

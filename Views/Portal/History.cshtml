@@ -1,7 +1,7 @@
-@model IEnumerable<StudentOrganizationSystem.Models.Attendance>
+@model IEnumerable<StudentOrganizationSystem.Models.MemberRecordViewModel>
 
 @{
-    ViewData["Title"] = "My Attendance";
+    ViewData["Title"] = "My Attendance & Participation";
 
     var member = ViewBag.Member as StudentOrganizationSystem.Models.Member;
 }
@@ -10,7 +10,7 @@
 
     <div class="page-header">
         <div class="page-header-text">
-            <h1>My Attendance</h1>
+            <h1>My Attendance &amp; Participation</h1>
             <p>@member?.FullName &middot; @member?.StudentID</p>
         </div>
         <a asp-action="Index" class="btn btn-light">← My Records</a>
@@ -19,14 +19,14 @@
     <div class="table-card">
 
         <div class="table-card-header">
-            <h2>Attendance History</h2>
+            <h2>Attendance &amp; Participation History</h2>
             <span class="record-count">@Model.Count() record(s)</span>
         </div>
 
         @if (!Model.Any())
         {
             <div class="empty-state">
-                <p>No attendance has been recorded for you yet.</p>
+                <p>No attendance or participation has been recorded for you yet.</p>
             </div>
         }
         else
@@ -38,6 +38,7 @@
                             <th>Activity</th>
                             <th>Date</th>
                             <th>Location</th>
+                            <th>Participation Type</th>
                             <th>Status</th>
                             <th>Recorded</th>
                         </tr>
@@ -46,18 +47,29 @@
                         @foreach (var record in Model)
                         {
                             <tr>
-                                <td><strong>@record.Activity?.ActivityTitle</strong></td>
-                                <td>@record.Activity?.ActivityDate.ToString("MMM dd, yyyy")</td>
-                                <td>@record.Activity?.Location</td>
+                                <td><strong>@record.ActivityTitle</strong></td>
+                                <td>@record.ActivityDate.ToString("MMM dd, yyyy")</td>
+                                <td>@record.Location</td>
                                 <td>
-                                    @if (record.Status == "Present")
+                                    @if (string.IsNullOrWhiteSpace(record.ParticipationType))
+                                    { <span class="hint-cell">—</span> }
+                                    else
+                                    { @record.ParticipationType }
+                                </td>
+                                <td>
+                                    @if (record.AttendanceStatus == "Present")
                                     { <span class="badge badge-present">Present</span> }
-                                    else if (record.Status == "Absent")
+                                    else if (record.AttendanceStatus == "Absent")
                                     { <span class="badge badge-absent">Absent</span> }
                                     else
-                                    { <span class="badge badge-inactive">@record.Status</span> }
+                                    { <span class="hint-cell">Not marked</span> }
                                 </td>
-                                <td>@record.RecordedAt.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    @if (record.RecordedAt.HasValue)
+                                    { @record.RecordedAt.Value.ToString("MMM dd, yyyy") }
+                                    else
+                                    { <span class="hint-cell">—</span> }
+                                </td>
                             </tr>
                         }
                     </tbody>

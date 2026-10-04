@@ -16,6 +16,16 @@ namespace StudentOrganizationSystem.Models
         [StringLength(255)]
         public string PasswordHash { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Web-root-relative path to the user's uploaded profile picture, e.g.
+        /// "/uploads/avatars/3_ab12.png". Null until a picture is uploaded; the
+        /// top bar then falls back to the initial letter. Written by
+        /// ProfileController and carried in the sign-in cookie (AppClaims).
+        /// </summary>
+        [StringLength(255)]
+        [Display(Name = "Profile picture")]
+        public string? AvatarPath { get; set; }
+
         [Required]
         public int RoleID { get; set; }
 

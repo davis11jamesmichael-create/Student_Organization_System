@@ -118,6 +118,12 @@
 .badge-absent  { background: var(--danger-light);  color: var(--danger-dark); }
 .badge-suspended { background: var(--warning-light); color: var(--warning); }
 
+/* Activity status (derived from date + time; see Models/ActivityStatus.cs) */
+.badge-upcoming  { background: var(--info-light);    color: var(--info); }
+.badge-ongoing   { background: var(--success-light); color: var(--success-dark); }
+.badge-cancelled { background: var(--danger-light);  color: var(--danger-dark); }
+.badge-finished  { background: var(--gray-100);      color: var(--gray-500); }
+
 /* ── Pager (AUDIT.md P3) ── */
 
 .pager {
@@ -315,6 +321,69 @@
     width: 30px;
     height: 30px;
     font-size: 12px;
+}
+
+/* A picture avatar: clip the image into the circle. */
+.avatar-image {
+    object-fit: cover;
+    padding: 0;
+    background: var(--gray-100);
+}
+
+/* ── Profile page (Views/Profile) ── */
+
+.profile-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.profile-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid var(--gray-200);
+    background: var(--gray-100);
+}
+
+.profile-avatar-initial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    color: var(--white);
+    font-size: 28px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-color: transparent;
+}
+
+.profile-head-text {
+    min-width: 0;
+}
+
+.profile-name {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.profile-sub {
+    margin-top: 2px;
+    font-size: 13px;
+    color: var(--gray-500);
+}
+
+.profile-divider {
+    border: none;
+    border-top: 1px solid var(--gray-100);
+    margin: 18px 0;
 }
 
 /* ── Icon button (top bar toggle) ── */

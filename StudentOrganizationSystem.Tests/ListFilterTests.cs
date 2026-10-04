@@ -51,18 +51,26 @@ public class ListFilterTests
     {
         using var db = TestDb.Create();
 
+        var now = DateTime.Now;
+
+        // Upcoming: starts an hour from now, so the clock makes it Upcoming.
         db.Activities.Add(new Activity
         {
             ActivityTitle = "General Assembly",
-            ActivityDate = DateTime.Today,
+            ActivityDate = now.Date,
+            StartTime = now.TimeOfDay.Add(TimeSpan.FromHours(1)),
+            EndTime = now.TimeOfDay.Add(TimeSpan.FromHours(2)),
             Location = "Hall",
             IsActive = true
         });
 
+        // Cancelled: the manual flag wins over the clock.
         db.Activities.Add(new Activity
         {
             ActivityTitle = "Cancelled Picnic",
-            ActivityDate = DateTime.Today,
+            ActivityDate = now.Date,
+            StartTime = new TimeSpan(9, 0, 0),
+            EndTime = new TimeSpan(10, 0, 0),
             Location = "Park",
             IsActive = false
         });
@@ -73,11 +81,17 @@ public class ListFilterTests
 
         Assert.Single(Model<Activity>(await controller.Index("Assembly", null, null, 1)));
 
-        var active = Model<Activity>(await controller.Index(null, null, "Active", 1));
-        Assert.All(active, a => Assert.True(a.IsActive));
+        var upcoming = Model<Activity>(
+            await controller.Index(null, null, ActivityStatus.Upcoming, 1));
+        Assert.All(upcoming, a => Assert.True(a.IsActive));
 
-        var inactive = Model<Activity>(await controller.Index(null, null, "Inactive", 1));
-        Assert.All(inactive, a => Assert.False(a.IsActive));
+        var cancelled = Model<Activity>(
+            await controller.Index(null, null, ActivityStatus.Cancelled, 1));
+        Assert.All(cancelled, a => Assert.False(a.IsActive));
+
+        // An unknown status is ignored (treated as "All"), not rendered as empty.
+        Assert.Equal(2, Model<Activity>(
+            await controller.Index(null, null, "Hacked", 1)).Count);
     }
 
     [Fact]

@@ -33,9 +33,30 @@
             </div>
 
             <div class="form-group">
+                <label asp-for="StartTime">Start Time</label>
+                <input asp-for="StartTime" type="time" class="form-control" />
+                <span asp-validation-for="StartTime" class="validation-message"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="EndTime">End Time</label>
+                <input asp-for="EndTime" type="time" class="form-control" />
+                <span asp-validation-for="EndTime" class="validation-message"></span>
+            </div>
+
+            <div class="form-group">
                 <label asp-for="Location">Location</label>
                 <input asp-for="Location" class="form-control" />
                 <span asp-validation-for="Location" class="validation-message"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="FacultyInCharge">
+                    Faculty / Instructor in charge <span class="label-hint">(optional)</span>
+                </label>
+                <input asp-for="FacultyInCharge" class="form-control"
+                       placeholder="e.g. Prof. Dela Cruz" />
+                <span asp-validation-for="FacultyInCharge" class="validation-message"></span>
             </div>
 
             <div class="form-group">
@@ -45,11 +66,15 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="IsActive">Status</label>
+                <label asp-for="IsActive">Cancellation</label>
                 <select asp-for="IsActive" class="form-control">
-                    <option value="true">Active</option>
-                    <option value="false">Inactive</option>
+                    <option value="true">No — keep scheduled</option>
+                    <option value="false">Yes — cancelled</option>
                 </select>
+                <span class="validation-message validation-hint">
+                    The status (Upcoming / Ongoing / Finished) is derived from the date and
+                    time; cancelling is the only part set by hand.
+                </span>
             </div>
 
             <div class="form-actions">

@@ -87,13 +87,23 @@
 
                     <div class="form-group">
                         <label asp-for="Password">Password</label>
-                        <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                        <div class="password-field">
+                            <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                            <button type="button" class="password-toggle"
+                                    data-toggle-password
+                                    aria-label="Show password" aria-pressed="false">Show</button>
+                        </div>
                         <span asp-validation-for="Password" class="validation-message"></span>
                     </div>
 
                     <div class="form-group">
                         <label asp-for="ConfirmPassword">Confirm Password</label>
-                        <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                        <div class="password-field">
+                            <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                            <button type="button" class="password-toggle"
+                                    data-toggle-password
+                                    aria-label="Show password" aria-pressed="false">Show</button>
+                        </div>
                         <span asp-validation-for="ConfirmPassword" class="validation-message"></span>
                     </div>
 
@@ -102,7 +112,7 @@
 
                 <p class="login-note">
                     Already registered?
-                    <a asp-action="Login" asp-controller="Account">Sign in</a>
+                    <a asp-action="Login" asp-controller="Account">Log in</a>
                 </p>
 
             </div>
@@ -116,6 +126,7 @@
 </div>
 
 <partial name="_ValidationScriptsPartial" />
+<script src="~/js/site.js"></script>
 
 </body>
 </html>

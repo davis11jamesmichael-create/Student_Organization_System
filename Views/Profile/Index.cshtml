@@ -1,0 +1,99 @@
+@model StudentOrganizationSystem.Models.User
+
+@{
+    ViewData["Title"] = "My Profile";
+
+    var roleName = Model.Role?.RoleName ?? "User";
+    var roleClass = roleName.ToLowerInvariant();
+    var initial = string.IsNullOrWhiteSpace(Model.Username)
+        ? "U"
+        : Model.Username.Trim().Substring(0, 1).ToUpperInvariant();
+    var hasAvatar = !string.IsNullOrWhiteSpace(Model.AvatarPath);
+}
+
+<div class="form-container">
+
+    <div class="page-header form-head">
+        <div class="page-header-text">
+            <h1>My Profile</h1>
+            <p>Your account details and profile picture</p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="form-card">
+
+        <div class="profile-head">
+            @if (hasAvatar)
+            {
+                <img class="profile-avatar" src="@Model.AvatarPath"
+                     alt="Profile picture of @Model.Username" />
+            }
+            else
+            {
+                <span class="profile-avatar profile-avatar-initial">@initial</span>
+            }
+
+            <div class="profile-head-text">
+                <h2 class="profile-name">
+                    @Model.Username
+                    <span class="badge-role badge-@roleClass">@roleName</span>
+                </h2>
+
+                @if (Model.Member != null)
+                {
+                    <p class="profile-sub">
+                        @Model.Member.FullName &middot; @Model.Member.StudentID
+                    </p>
+                }
+            </div>
+        </div>
+
+        <hr class="profile-divider" />
+
+        <h3 class="card-subtitle">Profile picture</h3>
+
+        <form asp-action="UploadAvatar" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div class="form-group">
+                <label for="avatar">
+                    Choose a picture
+                    <span class="label-hint">(JPG, PNG, GIF or WEBP, up to 2 MB)</span>
+                </label>
+                <input type="file" id="avatar" name="avatar" class="form-control"
+                       accept=".jpg,.jpeg,.png,.gif,.webp" />
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Upload picture</button>
+            </div>
+        </form>
+
+        @if (hasAvatar)
+        {
+            <form asp-action="RemoveAvatar" method="post"
+                  data-confirm="Remove your profile picture?">
+                @Html.AntiForgeryToken()
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-danger">Remove picture</button>
+                </div>
+            </form>
+        }
+
+        <p class="form-hint">
+            Your picture appears next to your name at the top of every page.
+            To change your password, use
+            <a asp-controller="Account" asp-action="ChangePassword">Change password</a>.
+        </p>
+
+    </div>
+
+</div>

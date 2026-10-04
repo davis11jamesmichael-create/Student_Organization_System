@@ -32,9 +32,30 @@
             </div>
 
             <div class="form-group">
+                <label asp-for="StartTime">Start Time</label>
+                <input asp-for="StartTime" type="time" class="form-control" />
+                <span asp-validation-for="StartTime" class="validation-message"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="EndTime">End Time</label>
+                <input asp-for="EndTime" type="time" class="form-control" />
+                <span asp-validation-for="EndTime" class="validation-message"></span>
+            </div>
+
+            <div class="form-group">
                 <label asp-for="Location">Location</label>
                 <input asp-for="Location" class="form-control" placeholder="Enter location" />
                 <span asp-validation-for="Location" class="validation-message"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="FacultyInCharge">
+                    Faculty / Instructor in charge <span class="label-hint">(optional)</span>
+                </label>
+                <input asp-for="FacultyInCharge" class="form-control"
+                       placeholder="e.g. Prof. Dela Cruz" />
+                <span asp-validation-for="FacultyInCharge" class="validation-message"></span>
             </div>
 
             <div class="form-group">

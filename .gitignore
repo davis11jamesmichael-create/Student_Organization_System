@@ -40,3 +40,7 @@ Desktop.ini
 *.log
 *.tmp
 _tmp_*
+
+# Uploaded profile pictures — runtime data, recreated on demand by
+# ProfileController. Never commit a user's photo.
+wwwroot/uploads/
