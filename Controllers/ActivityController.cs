@@ -6,11 +6,13 @@ using StudentOrganizationSystem.Models;
 
 namespace StudentOrganizationSystem.Controllers
 {
-    // Role policy (AUDIT.md P0.6, decision D3):
-    //   any signed-in user -> Index, Details, adding a new activity, and recording
-    //                         attendance (that is the Officer's day-to-day work);
-    //   Admin only         -> changing or (de)activating an existing activity.
-    [Authorize]
+    // Role policy (AUDIT.md P0.6, decision D3; extended to "Admin-only Create"):
+    //   any signed-in user -> Index, Details, and recording attendance (that is
+    //                         the Officer's day-to-day work);
+    //   Admin only         -> adding a new activity, and changing or
+    //                         (de)activating an existing one.
+    // Staff only (Admin or Officer). A "Member" login is confined to PortalController.
+    [Authorize(Roles = AppRoles.AdminOrOfficer)]
     public class ActivityController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -24,13 +26,18 @@ namespace StudentOrganizationSystem.Controllers
         public async Task<IActionResult> Index(
             string? search,
             DateTime? activityDate,
-            string? status)
+            string? status,
+            int page = 1)
         {
-            var query = _context.Activities.AsQueryable();
+            // P1.10: this list is read-only, so the entities are not tracked.
+            var query = _context.Activities.AsNoTracking().AsQueryable();
 
             // Search by activity title
             if (!string.IsNullOrWhiteSpace(search))
             {
+                // P1.6: trim the term so a stray space cannot hide a match.
+                search = search.Trim();
+
                 query = query.Where(a =>
                     a.ActivityTitle.Contains(search));
             }
@@ -55,18 +62,32 @@ namespace StudentOrganizationSystem.Controllers
                 }
             }
 
-            var activities = await query
-                .OrderByDescending(a => a.ActivityDate)
-                .ToListAsync();
+            // P3: one page at a time, with the filters carried into the pager.
+            var paged = await Paging.ToPagedAsync(
+                query.OrderByDescending(a => a.ActivityDate),
+                page);
 
             ViewBag.Search = search;
             ViewBag.ActivityDate = activityDate?.ToString("yyyy-MM-dd");
             ViewBag.Status = status;
+            ViewBag.Pager = paged.ToPager(
+                "Activity",
+                "Index",
+                new Dictionary<string, string>
+                {
+                    ["search"] = search ?? string.Empty,
+                    ["activityDate"] = activityDate?.ToString("yyyy-MM-dd") ?? string.Empty,
+                    ["status"] = status ?? string.Empty
+                });
 
-            return View(activities);
+            return View(paged.Items);
         }
 
         // GET: /Activity/Create
+        // Admin only: adding an activity is an administrative action, so it
+        // carries the same role guard as Edit / Activate / Deactivate. The
+        // matching "+ Add Activity" links are hidden from Officers in the views.
+        [Authorize(Roles = AppRoles.Admin)]
         public IActionResult Create()
         {
             return View();
@@ -75,8 +96,19 @@ namespace StudentOrganizationSystem.Controllers
         // POST: /Activity/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppRoles.Admin)]
         public async Task<IActionResult> Create([Bind("ActivityTitle,ActivityDate,Location,Description")] Activity activity)
         {
+            // P1.6: trim before validating and saving, so "  Quiz Bee  " and
+            // "Quiz Bee" never become two different activities.
+            activity.ActivityTitle = (activity.ActivityTitle ?? string.Empty).Trim();
+            activity.Location = (activity.Location ?? string.Empty).Trim();
+            activity.Description = activity.Description?.Trim();
+
+            // Re-validate the cleaned values (the binder saw the untrimmed text).
+            ModelState.Clear();
+            TryValidateModel(activity);
+
             if (!ModelState.IsValid)
             {
                 return View(activity);
@@ -103,8 +135,10 @@ namespace StudentOrganizationSystem.Controllers
                 return NotFound();
             }
 
+            // P1.10: read-only load for the form.
             var activity = await _context.Activities
-                .FindAsync(id);
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.ActivityID == id);
 
             if (activity == null)
             {
@@ -126,6 +160,14 @@ namespace StudentOrganizationSystem.Controllers
             {
                 return NotFound();
             }
+
+            // P1.6: trim and re-validate, exactly as in Create.
+            activity.ActivityTitle = (activity.ActivityTitle ?? string.Empty).Trim();
+            activity.Location = (activity.Location ?? string.Empty).Trim();
+            activity.Description = activity.Description?.Trim();
+
+            ModelState.Clear();
+            TryValidateModel(activity);
 
             if (!ModelState.IsValid)
             {
@@ -163,6 +205,7 @@ namespace StudentOrganizationSystem.Controllers
             }
 
             var activity = await _context.Activities
+                .AsNoTracking()
                 .FirstOrDefaultAsync(a => a.ActivityID == id);
 
             if (activity == null)

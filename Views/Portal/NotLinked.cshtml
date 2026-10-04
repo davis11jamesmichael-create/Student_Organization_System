@@ -1,0 +1,27 @@
+@{
+    ViewData["Title"] = "Account Not Linked";
+}
+
+<div class="page-container">
+
+    <div class="error-page">
+
+        <div class="error-page-icon">🔗</div>
+
+        <h1>Account not linked</h1>
+
+        <p>
+            This login is not connected to a member record yet, so there is
+            nothing to show here. Please contact the organization adviser.
+        </p>
+
+        <div class="error-page-actions">
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-primary">Sign out</button>
+            </form>
+        </div>
+
+    </div>
+
+</div>

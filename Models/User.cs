@@ -23,7 +23,18 @@ namespace StudentOrganizationSystem.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
+        /// <summary>
+        /// Set only for "Member" accounts: the Members row this login belongs to.
+        /// Null for Admin and Officer accounts, which manage the whole system
+        /// rather than one member. The one-to-one relationship gives a unique
+        /// index, so one member can never have two accounts.
+        /// </summary>
+        public int? MemberID { get; set; }
+
         [ForeignKey("RoleID")]
         public Role? Role { get; set; }
+
+        [ForeignKey("MemberID")]
+        public Member? Member { get; set; }
     }
 }

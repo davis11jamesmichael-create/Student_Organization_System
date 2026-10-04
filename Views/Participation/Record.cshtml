@@ -1,0 +1,97 @@
+@model IEnumerable<StudentOrganizationSystem.Models.Member>
+
+@{
+    ViewData["Title"] = "Record Participation";
+    var activity = ViewBag.Activity as StudentOrganizationSystem.Models.Activity;
+    var existing = ViewBag.ExistingParticipation as Dictionary<int, string>
+                   ?? new Dictionary<int, string>();
+}
+
+<div class="page-container">
+
+    <div class="page-header">
+        <div class="page-header-text">
+            <h1>Record Participation</h1>
+            <p>
+                <strong>@activity?.ActivityTitle</strong>
+                &nbsp;·&nbsp; @activity?.ActivityDate.ToString("MMMM dd, yyyy")
+                &nbsp;·&nbsp; @activity?.Location
+            </p>
+        </div>
+        <a asp-action="Index" class="btn btn-light">← Back</a>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            No active members found. Please add members first.
+        </div>
+    }
+    else
+    {
+        <form asp-action="Record" asp-route-id="@activity?.ActivityID" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="table-card card-spaced">
+                <div class="table-card-header">
+                    <h2>Members</h2>
+                    <span class="record-count">@Model.Count() active member(s)</span>
+                </div>
+
+                <div class="participation-toolbar">
+                    <span class="participation-hint">
+                        Type a role for each member. Leave a box blank to record no participation.
+                    </span>
+                    <button type="button" class="btn btn-sm btn-light" id="clear-all">
+                        Clear all
+                    </button>
+                </div>
+
+                <datalist id="participation-types">
+                    @foreach (var type in StudentOrganizationSystem.Models.ParticipationTypes.Suggested)
+                    {
+                        <option value="@type"></option>
+                    }
+                </datalist>
+
+                @foreach (var member in Model)
+                {
+                    var type = existing.ContainsKey(member.MemberID)
+                        ? existing[member.MemberID] : string.Empty;
+
+                    <div class="participation-row">
+                        <div class="attendance-member">
+                            <div class="attendance-member-name">@member.FullName</div>
+                            <div class="attendance-member-meta">
+                                @member.StudentID · @member.Course · @member.YearLevel
+                            </div>
+                        </div>
+                        <input type="text"
+                               class="form-control participation-input"
+                               name="participation[@member.MemberID]"
+                               value="@type"
+                               maxlength="100"
+                               list="participation-types"
+                               placeholder="e.g. Organizer"
+                               autocomplete="off" />
+                    </div>
+                }
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn btn-primary">Save Participation</button>
+                <a asp-action="Index" class="btn btn-light">Cancel</a>
+            </div>
+
+        </form>
+    }
+
+</div>
+
+
+

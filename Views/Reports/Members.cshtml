@@ -1,0 +1,101 @@
+@model IEnumerable<StudentOrganizationSystem.Models.MemberReportRow>
+
+@{
+    ViewData["Title"] = "Member Report";
+}
+
+<div class="page-container">
+
+    <div class="page-header">
+        <div class="page-header-text">
+            <h1>Member Summary</h1>
+            <p>Attendance rate and participation per member</p>
+        </div>
+        <div class="action-group">
+            <button type="button" class="btn btn-secondary" id="print-report">Print</button>
+            <a asp-action="Index" class="btn btn-light">← Back</a>
+        </div>
+    </div>
+
+    <div class="filter-card">
+        <form asp-action="Members" method="get" class="filter-form">
+            <div class="filter-group">
+                <label>Search</label>
+                <input type="text" name="search" value="@ViewBag.Search"
+                       placeholder="Name or Student ID" />
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-secondary">Search</button>
+                <a asp-action="Members" class="btn btn-light">Clear</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="print-title">
+        Member Summary — generated @DateTime.Now.ToString("MMMM dd, yyyy hh:mm tt")
+    </div>
+
+    <div class="table-card">
+        <div class="table-card-header">
+            <h2>Per-Member Summary</h2>
+            <span class="record-count">@Model.Count() member(s)</span>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="empty-state"><p>No members found.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Full Name</th>
+                            <th>Member</th>
+                            <th>Standing</th>
+                            <th>Present</th>
+                            <th>Absent</th>
+                            <th>Attendance Rate</th>
+                            <th>Participation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model)
+                        {
+                            <tr>
+                                <td>@row.StudentID</td>
+                                <td><strong>@row.FullName</strong></td>
+                                <td>
+                                    @if (row.IsActive)
+                                    { <span class="badge badge-active">Active</span> }
+                                    else
+                                    { <span class="badge badge-inactive">Inactive</span> }
+                                </td>
+                                <td>
+                                    @if (row.Standing == MembershipStatus.Active)
+                                    { <span class="badge badge-active">Active</span> }
+                                    else if (row.Standing == MembershipStatus.Suspended)
+                                    { <span class="badge badge-suspended">Suspended</span> }
+                                    else if (row.Standing == MembershipStatus.Inactive)
+                                    { <span class="badge badge-inactive">Inactive</span> }
+                                    else
+                                    { <span class="badge badge-inactive">Not set up</span> }
+                                </td>
+                                <td>@row.Present</td>
+                                <td>@row.Absent</td>
+                                <td>@row.Rate.ToString("0.#")%</td>
+                                <td>@row.ParticipationCount</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+</div>
+
+
+

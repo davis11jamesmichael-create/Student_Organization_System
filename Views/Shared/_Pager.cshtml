@@ -1,0 +1,45 @@
+@model StudentOrganizationSystem.Models.PagerViewModel
+
+@if (Model.TotalCount > 0)
+{
+    <nav class="pager" aria-label="Pagination">
+        <span class="pager-info">
+            Showing @Model.FirstItem–@Model.LastItem of @Model.TotalCount
+        </span>
+
+        @if (Model.TotalPages > 1)
+        {
+            <div class="pager-links">
+                @if (Model.HasPrevious)
+                {
+                    <a class="pager-link"
+                       asp-controller="@Model.Controller" asp-action="@Model.Action"
+                       asp-all-route-data="@Model.RouteValues"
+                       asp-route-page="@(Model.Page - 1)"
+                       rel="prev">&larr; Prev</a>
+                }
+                else
+                {
+                    <span class="pager-link is-disabled" aria-disabled="true">&larr; Prev</span>
+                }
+
+                <span class="pager-page" aria-current="page">
+                    Page @Model.Page of @Model.TotalPages
+                </span>
+
+                @if (Model.HasNext)
+                {
+                    <a class="pager-link"
+                       asp-controller="@Model.Controller" asp-action="@Model.Action"
+                       asp-all-route-data="@Model.RouteValues"
+                       asp-route-page="@(Model.Page + 1)"
+                       rel="next">Next &rarr;</a>
+                }
+                else
+                {
+                    <span class="pager-link is-disabled" aria-disabled="true">Next &rarr;</span>
+                }
+            </div>
+        }
+    </nav>
+}

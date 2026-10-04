@@ -7,7 +7,10 @@ using StudentOrganizationSystem.Models;
 
 namespace StudentOrganizationSystem.Controllers
 {
-    [Authorize]
+    // Staff only (Admin or Officer): a Member account has no business on the
+    // management screens. HomeController.Error carries [AllowAnonymous] so error
+    // pages still render for everyone.
+    [Authorize(Roles = AppRoles.AdminOrOfficer)]
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -23,21 +26,43 @@ namespace StudentOrganizationSystem.Controllers
 
         public async Task<IActionResult> Index()
         {
+            // P1.10: the old version issued six separate COUNT round trips for one
+            // screen. This is two grouped queries (total + active per table) plus
+            // one count for each of the two history tables. AsNoTracking() because
+            // nothing here is ever written back.
+            var memberCounts = await _context.Members.AsNoTracking()
+                .GroupBy(m => 1)
+                .Select(g => new
+                {
+                    Total = g.Count(),
+                    Active = g.Count(m => m.IsActive)
+                })
+                .FirstOrDefaultAsync();
+
+            var activityCounts = await _context.Activities.AsNoTracking()
+                .GroupBy(a => 1)
+                .Select(g => new
+                {
+                    Total = g.Count(),
+                    Active = g.Count(a => a.IsActive)
+                })
+                .FirstOrDefaultAsync();
+
             var dashboard = new DashboardViewModel
             {
-                TotalMembers = await _context.Members.CountAsync(),
-                ActiveMembers = await _context.Members
-                    .CountAsync(m => m.IsActive),
+                TotalMembers = memberCounts?.Total ?? 0,
+                ActiveMembers = memberCounts?.Active ?? 0,
 
-                TotalActivities = await _context.Activities.CountAsync(),
+                TotalActivities = activityCounts?.Total ?? 0,
+                ActiveActivities = activityCounts?.Active ?? 0,
 
-                ActiveActivities = await _context.Activities
-                    .CountAsync(a => a.IsActive),
+                TotalAttendance = await _context.Attendances
+                    .AsNoTracking()
+                    .CountAsync(),
 
-                TotalAttendance = await _context.Attendances.CountAsync(),
-
-                TotalParticipation =
-                    await _context.Participations.CountAsync()
+                TotalParticipation = await _context.Participations
+                    .AsNoTracking()
+                    .CountAsync()
             };
 
             return View(dashboard);

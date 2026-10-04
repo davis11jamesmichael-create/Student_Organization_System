@@ -2,11 +2,13 @@
 
 @{
     ViewData["Title"] = "Activity Details";
+
+    var isAdmin = User.IsInRole(AppRoles.Admin);
 }
 
 <div class="form-container">
 
-    <div class="page-header" style="margin-bottom:20px;">
+    <div class="page-header form-head">
         <div class="page-header-text">
             <h1>Activity Details</h1>
             <p>View complete activity information</p>
@@ -62,7 +64,10 @@
         }
 
         <div class="details-actions">
-            <a asp-action="Edit" asp-route-id="@Model.ActivityID" class="btn btn-primary">Edit</a>
+            @if (isAdmin)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.ActivityID" class="btn btn-primary">Edit</a>
+            }
             <a asp-action="Index" class="btn btn-light">Back to Activities</a>
         </div>
 

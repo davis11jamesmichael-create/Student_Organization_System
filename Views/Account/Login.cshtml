@@ -84,6 +84,10 @@
                 <form asp-action="Login" asp-controller="Account" method="post">
                     @Html.AntiForgeryToken()
 
+                    @* P1.9: keep the page the user was bounced off so a successful
+                       sign-in returns them there instead of the dashboard. *@
+                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
                     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
                     <div class="form-group">
@@ -113,6 +117,11 @@
 
                 <p class="login-note">
                     Authorized users only. Contact the organization adviser if you need an account.
+                </p>
+
+                <p class="login-note">
+                    New member?
+                    <a asp-action="Register" asp-controller="Account">Create an account</a>
                 </p>
 
             </div>

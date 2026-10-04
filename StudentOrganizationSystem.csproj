@@ -21,4 +21,12 @@
 
   </ItemGroup>
 
+  <!-- The test project lives under this folder; keep its sources out of the app. -->
+  <ItemGroup>
+    <Compile Remove="StudentOrganizationSystem.Tests\**" />
+    <Content Remove="StudentOrganizationSystem.Tests\**" />
+    <EmbeddedResource Remove="StudentOrganizationSystem.Tests\**" />
+    <None Remove="StudentOrganizationSystem.Tests\**" />
+  </ItemGroup>
+
 </Project>

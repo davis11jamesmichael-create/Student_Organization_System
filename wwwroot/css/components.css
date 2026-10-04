@@ -116,6 +116,131 @@
 .badge-inactive { background: var(--gray-100); color: var(--gray-500); }
 .badge-present { background: var(--success-light); color: var(--success-dark); }
 .badge-absent  { background: var(--danger-light);  color: var(--danger-dark); }
+.badge-suspended { background: var(--warning-light); color: var(--warning); }
+
+/* ── Pager (AUDIT.md P3) ── */
+
+.pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--gray-100);
+    flex-wrap: wrap;
+}
+
+.pager-info {
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+.pager-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pager-link {
+    display: inline-block;
+    padding: 5px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-700);
+    background: var(--white);
+    text-decoration: none;
+    transition: all var(--transition);
+}
+
+.pager-link:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.pager-link.is-disabled {
+    color: var(--gray-300);
+    border-color: var(--gray-100);
+    cursor: default;
+}
+
+.pager-page {
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+/* ── Layout helpers (replace inline style="..." attributes, AUDIT.md P3) ── */
+
+/* A row of buttons/links. */
+.btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* An inline <form> for a small POST action inside a button row. */
+.form-inline {
+    display: inline;
+}
+
+/* A header at the top of a form card keeps its spacing. */
+.form-head {
+    margin-bottom: 20px;
+}
+
+/* A second card stacked under the first. */
+.card-stacked {
+    margin-top: 20px;
+}
+
+/* A card that needs a gap below it before the next one. */
+.card-spaced {
+    margin-bottom: 16px;
+}
+
+/* A small heading inside a card. */
+.card-subtitle {
+    font-size: 15px;
+    margin-bottom: 12px;
+}
+
+/* Muted helper text (a whole note). */
+.note-muted {
+    color: var(--gray-500);
+    font-size: 12px;
+}
+
+/* Muted helper text that sits right under a stats grid. */
+.note-muted.tight {
+    margin: -8px 0 16px;
+}
+
+/* Muted placeholder text inside a table cell. */
+.hint-cell {
+    color: var(--gray-400);
+    font-size: 12px;
+}
+
+/* The "(optional)" hint inside a form label. */
+.label-hint {
+    font-weight: 400;
+    color: var(--gray-400);
+}
+
+/* A validation message re-used as a hint. */
+.validation-hint {
+    color: var(--gray-500);
+}
+
+/* Coloured numbers in the stat blocks. */
+.stat-number-success { color: var(--success-dark); }
+.stat-number-danger  { color: var(--danger-dark); }
+
+/* Drop the left offset on a control already inside a padded card. */
+.flush-left {
+    margin-left: 0;
+}
 
 /* ── Alerts ── */
 
@@ -310,5 +435,63 @@
     gap: 10px;
     flex-wrap: wrap;
     margin-top: 20px;
+}
+
+/* ── Topbar search (module 3J) ── */
+
+.topbar-search {
+    flex: 1;
+    max-width: 360px;
+    margin: 0 16px;
+}
+
+.topbar-search input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: 13px;
+    background: var(--gray-50);
+    color: var(--gray-800);
+    transition: border-color var(--transition), background var(--transition);
+}
+
+.topbar-search input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: var(--white);
+}
+
+/* ── Role hints: role badge + Officer read-only note (AUDIT.md P0.6) ── */
+
+.badge-role {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.badge-admin   { background: var(--primary);       color: var(--white); }
+.badge-officer { background: var(--gray-800);      color: var(--white); }
+.badge-member  { background: var(--success-light); color: var(--success-dark); }
+
+.admin-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    border-radius: var(--radius-sm);
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    color: var(--gray-600);
+    font-size: 13px;
+    font-weight: 500;
 }
 

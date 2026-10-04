@@ -1,0 +1,155 @@
+@model IEnumerable<StudentOrganizationSystem.Models.User>
+
+@{
+    ViewData["Title"] = "Users & Roles";
+
+    var pending = ViewBag.Pending as List<StudentOrganizationSystem.Models.User>
+                  ?? new List<StudentOrganizationSystem.Models.User>();
+}
+
+<div class="page-container">
+
+    <div class="page-header">
+        <div class="page-header-text">
+            <h1>Users &amp; Roles</h1>
+            <p>Create accounts, assign roles, and approve registrations</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">+ Add User</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (pending.Any())
+    {
+        <div class="table-card">
+            <div class="table-card-header">
+                <h2>Pending Registrations</h2>
+                <span class="record-count">@pending.Count awaiting approval</span>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Member</th>
+                            <th>Student ID</th>
+                            <th>Course</th>
+                            <th>Requested</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in pending)
+                        {
+                            <tr>
+                                <td><strong>@p.Username</strong></td>
+                                <td>@p.Member?.FullName</td>
+                                <td>@p.Member?.StudentID</td>
+                                <td>@p.Member?.Course</td>
+                                <td>@p.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <div class="action-group">
+                                        <form asp-action="Approve" asp-route-id="@p.UserID" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                        </form>
+                                        <form asp-action="Reject" asp-route-id="@p.UserID" method="post"
+                                              class="form-inline"
+                                              data-confirm="Reject and remove this registration?">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <div class="table-card">
+        <div class="table-card-header">
+            <h2>All Accounts</h2>
+            <span class="record-count">@Model.Count() record(s)</span>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Linked Member</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        foreach (var u in Model)
+                        {
+                            <tr>
+                                <td><strong>@u.Username</strong></td>
+                                <td>
+                                    <span class="badge-role badge-@(u.Role?.RoleName?.ToLowerInvariant()) flush-left">
+                                        @u.Role?.RoleName
+                                    </span>
+                                </td>
+                                <td>
+                                    @(u.Member == null
+                                        ? "—"
+                                        : u.Member.FullName + " (" + u.Member.StudentID + ")")
+                                </td>
+                                <td>
+                                    @if (u.IsActive)
+                                    { <span class="badge badge-active">Active</span> }
+                                    else
+                                    { <span class="badge badge-inactive">Inactive</span> }
+                                </td>
+                                <td>@u.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <div class="action-group">
+                                        <a asp-action="Edit" asp-route-id="@u.UserID"
+                                           class="btn btn-sm btn-warning">Edit</a>
+                                        @if (u.IsActive)
+                                        {
+                                            <form asp-action="Deactivate" asp-route-id="@u.UserID" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-danger">Deactivate</button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="Activate" asp-route-id="@u.UserID" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-success">Activate</button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="6"><div class="empty-state"><p>No accounts found.</p></div></td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @* __TABLE__ *@
+
+</div>

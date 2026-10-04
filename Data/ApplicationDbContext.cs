@@ -57,11 +57,28 @@ namespace StudentOrganizationSystem.Data
                 })
                 .IsUnique();
 
+            // Decision D2: one membership row per member, so Members 1 -> 1
+            // Memberships. "History" is the row's DateJoined / UpdatedAt plus the
+            // member's attendance and participation, not extra membership rows.
+            modelBuilder.Entity<Membership>()
+                .HasIndex(m => m.MemberID)
+                .IsUnique();
+
             // User -> Role
             modelBuilder.Entity<User>()
                 .HasOne(u => u.Role)
                 .WithMany(r => r.Users)
                 .HasForeignKey(u => u.RoleID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // User -> Member (one login per member).
+            // Optional on the User side, because Admin and Officer accounts have
+            // no Members row. Optional on the Member side, because a member can
+            // exist before they register an account.
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Member)
+                .WithOne(m => m.User)
+                .HasForeignKey<User>(u => u.MemberID)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Membership -> Member

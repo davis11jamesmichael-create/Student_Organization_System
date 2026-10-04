@@ -1,0 +1,109 @@
+@model StudentOrganizationSystem.Models.Member
+
+@{
+    ViewData["Title"] = "My Records";
+}
+
+<div class="page-container">
+
+    <div class="page-header">
+        <div class="page-header-text">
+            <h1>My Records</h1>
+            <p>Your membership profile and activity totals</p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <div class="stat-icon indigo">📋</div>
+            <div class="stat-body">
+                <div class="stat-label">Activities Recorded</div>
+                <div class="stat-number">@ViewBag.TotalCount</div>
+                <div class="stat-sub">attendance entries</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon green">✅</div>
+            <div class="stat-body">
+                <div class="stat-label">Present</div>
+                <div class="stat-number">@ViewBag.PresentCount</div>
+                <div class="stat-sub">times marked present</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon amber">🚫</div>
+            <div class="stat-body">
+                <div class="stat-label">Absent</div>
+                <div class="stat-number">@ViewBag.AbsentCount</div>
+                <div class="stat-sub">times marked absent</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon blue">🏅</div>
+            <div class="stat-body">
+                <div class="stat-label">Participation</div>
+                <div class="stat-number">@ViewBag.ParticipationCount</div>
+                <div class="stat-sub">recorded entries</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="form-container">
+
+        <div class="details-card">
+
+            <div class="details-row">
+                <span class="details-label">Student ID</span>
+                <span class="details-value">@Model.StudentID</span>
+            </div>
+
+            <div class="details-row">
+                <span class="details-label">Full Name</span>
+                <span class="details-value"><strong>@Model.FullName</strong></span>
+            </div>
+
+            <div class="details-row">
+                <span class="details-label">Course</span>
+                <span class="details-value">@Model.Course</span>
+            </div>
+
+            <div class="details-row">
+                <span class="details-label">Year Level</span>
+                <span class="details-value">@Model.YearLevel</span>
+            </div>
+
+            <div class="details-row">
+                <span class="details-label">Membership Status</span>
+                <span class="details-value">
+                    @if (Model.IsActive)
+                    { <span class="badge badge-active">Active</span> }
+                    else
+                    { <span class="badge badge-inactive">Inactive</span> }
+                </span>
+            </div>
+
+            <div class="details-row">
+                <span class="details-label">Registered</span>
+                <span class="details-value">@Model.CreatedAt.ToString("MMMM dd, yyyy")</span>
+            </div>
+
+            <div class="details-actions">
+                <a asp-action="Attendance" class="btn btn-primary">My Attendance</a>
+                <a asp-action="Participation" class="btn btn-light">My Participation</a>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

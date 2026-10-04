@@ -18,5 +18,21 @@ namespace StudentOrganizationSystem.Models
         /// record attendance. Cannot change or deactivate an existing record.
         /// </summary>
         public const string Officer = "Officer";
+
+        /// <summary>
+        /// A student who signed up through the public registration page and was
+        /// approved by an Admin. Can only read their own records through the
+        /// Portal; every management screen is off limits. The account is linked
+        /// to exactly one Members row through Users.MemberID.
+        /// </summary>
+        public const string Member = "Member";
+
+        /// <summary>
+        /// The two staff roles. Used as one string so a controller can say
+        /// "staff only" without listing the roles twice and risking a typo.
+        /// Const concatenation happens at compile time, so this is valid inside
+        /// [Authorize(Roles = ...)].
+        /// </summary>
+        public const string AdminOrOfficer = Admin + "," + Officer;
     }
 }

@@ -1,0 +1,121 @@
+@model StudentOrganizationSystem.Models.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Create Account";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create account — Student Organization System</title>
+    <link rel="stylesheet" href="~/css/base.css" />
+    <link rel="stylesheet" href="~/css/components.css" />
+    <link rel="stylesheet" href="~/css/forms.css" />
+    <link rel="stylesheet" href="~/css/login.css" />
+</head>
+<body>
+
+<div class="login-page">
+    <div class="login-shell">
+
+        <aside class="login-aside">
+            <div class="login-aside-brand">
+                <span class="login-aside-brand-icon">🎓</span>
+                Student Org System
+            </div>
+
+            <div class="login-aside-body">
+                <h2 class="login-aside-title">Join your organization</h2>
+                <p class="login-aside-desc">
+                    Create your member account to follow your own attendance and
+                    participation records. An adviser approves new accounts
+                    before they can sign in.
+                </p>
+            </div>
+
+            <p class="login-aside-foot">
+                &copy; @DateTime.Now.Year Student Organization Management System
+            </p>
+        </aside>
+
+        <main class="login-panel">
+            <div class="login-card">
+
+                <div class="login-head">
+                    <div class="login-logo">📝</div>
+                    <h1>Create your account</h1>
+                    <p>Fill in your details to request access.</p>
+                </div>
+
+                <form asp-action="Register" asp-controller="Account" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+                    <div class="form-group">
+                        <label asp-for="StudentID">Student ID</label>
+                        <input asp-for="StudentID" class="form-control" placeholder="2024-00001" />
+                        <span asp-validation-for="StudentID" class="validation-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="FullName">Full Name</label>
+                        <input asp-for="FullName" class="form-control" />
+                        <span asp-validation-for="FullName" class="validation-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Course">Course</label>
+                        <input asp-for="Course" class="form-control" />
+                        <span asp-validation-for="Course" class="validation-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="YearLevel">Year Level</label>
+                        <input asp-for="YearLevel" class="form-control" />
+                        <span asp-validation-for="YearLevel" class="validation-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Username">Username</label>
+                        <input asp-for="Username" class="form-control" autocomplete="username" />
+                        <span asp-validation-for="Username" class="validation-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Password">Password</label>
+                        <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="Password" class="validation-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ConfirmPassword">Confirm Password</label>
+                        <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmPassword" class="validation-message"></span>
+                    </div>
+
+                    <button type="submit" class="login-btn">Request Account</button>
+                </form>
+
+                <p class="login-note">
+                    Already registered?
+                    <a asp-action="Login" asp-controller="Account">Sign in</a>
+                </p>
+
+            </div>
+
+            <p class="login-mobile-brand">
+                &copy; @DateTime.Now.Year Student Organization Management System
+            </p>
+        </main>
+
+    </div>
+</div>
+
+<partial name="_ValidationScriptsPartial" />
+
+</body>
+</html>

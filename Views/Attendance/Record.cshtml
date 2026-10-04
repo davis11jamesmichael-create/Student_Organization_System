@@ -5,6 +5,17 @@
     var activity = ViewBag.Activity as StudentOrganizationSystem.Models.Activity;
     var existing = ViewBag.ExistingAttendance as Dictionary<int, string>
                    ?? new Dictionary<int, string>();
+
+    var members = Model.ToList();
+
+    // P1.1: a member counts as marked only when a valid status was already
+    // saved. Anything unmarked starts with no radio selected, so a status is
+    // never invented just by opening the form and pressing Save.
+    var marked = members.Count(m =>
+        existing.ContainsKey(m.MemberID)
+        && AttendanceStatus.IsValid(existing[m.MemberID]));
+
+    var unmarked = members.Count - marked;
 }
 
 <div class="page-container">
@@ -21,7 +32,12 @@
         <a asp-action="Index" class="btn btn-light">← Back</a>
     </div>
 
-    @if (!Model.Any())
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (!members.Any())
     {
         <div class="alert alert-info">
             No active members found. Please add members first.
@@ -29,21 +45,43 @@
     }
     else
     {
-        <form asp-action="Record" asp-route-id="@activity?.ActivityID" method="post">
+        <form asp-action="Record" asp-route-id="@activity?.ActivityID"
+              method="post" id="attendance-form">
             @Html.AntiForgeryToken()
 
-            <div class="table-card" style="margin-bottom:16px;">
+            <div class="table-card card-spaced">
                 <div class="table-card-header">
                     <h2>Members</h2>
-                    <span class="record-count">@Model.Count() active member(s)</span>
+                    <span class="record-count">@members.Count active member(s)</span>
                 </div>
 
-                @foreach (var member in Model)
-                {
-                    var status = existing.ContainsKey(member.MemberID)
-                        ? existing[member.MemberID] : "Present";
+                <div class="attendance-toolbar">
+                    <span id="unmarked-count"
+                          class="attendance-counter @(unmarked == 0 ? "is-clear" : "")"
+                          data-unmarked="@unmarked">
+                        @(unmarked == 0
+                            ? "All members marked"
+                            : unmarked + " member(s) not yet marked")
+                    </span>
+                    <div class="attendance-toolbar-actions">
+                        <button type="button" class="btn btn-sm btn-light"
+                                data-mark-all="Present">
+                            Mark all present
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light"
+                                data-mark-all="Absent">
+                            Mark all absent
+                        </button>
+                    </div>
+                </div>
 
-                    <div class="attendance-row">
+                @foreach (var member in members)
+                {
+                    var hasSaved = existing.ContainsKey(member.MemberID)
+                                   && AttendanceStatus.IsValid(existing[member.MemberID]);
+                    var status = hasSaved ? existing[member.MemberID] : null;
+
+                    <div class="attendance-row" data-member-row>
                         <div class="attendance-member">
                             <div class="attendance-member-name">@member.FullName</div>
                             <div class="attendance-member-meta">
@@ -70,7 +108,7 @@
                 }
             </div>
 
-            <div style="display:flex;gap:8px;">
+            <div class="btn-row">
                 <button type="submit" class="btn btn-primary">Save Attendance</button>
                 <a asp-action="Index" class="btn btn-light">Cancel</a>
             </div>
@@ -80,14 +118,5 @@
 
 </div>
 
-<script>
-    document.querySelectorAll('.radio-option input[type="radio"]').forEach(function (radio) {
-        radio.addEventListener('change', function () {
-            var group = this.closest('.radio-group');
-            group.querySelectorAll('.radio-option').forEach(function (opt) {
-                opt.classList.remove('selected');
-            });
-            this.closest('.radio-option').classList.add('selected');
-        });
-    });
-</script>
+
+

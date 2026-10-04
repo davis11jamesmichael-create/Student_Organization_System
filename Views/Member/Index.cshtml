@@ -2,6 +2,10 @@
 
 @{
     ViewData["Title"] = "Members";
+
+    // Admin-only controls are hidden from Officers; the actions themselves are
+    // also guarded server-side (MemberController Create/Edit/Activate/Deactivate).
+    var isAdmin = User.IsInRole(AppRoles.Admin);
 }
 
 <div class="page-container">
@@ -11,12 +15,23 @@
             <h1>Members</h1>
             <p>Manage organization member records</p>
         </div>
-        <a asp-action="Create" class="btn btn-primary">+ Add Member</a>
+        @if (isAdmin)
+        {
+            <a asp-action="Create" class="btn btn-primary">+ Add Member</a>
+        }
     </div>
 
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (!isAdmin)
+    {
+        <div class="admin-note">
+            <span aria-hidden="true">🔒</span>
+            Signed in as Officer — admin-only actions (add, edit, activate / deactivate) are hidden.
+        </div>
     }
 
     <div class="filter-card">
@@ -86,21 +101,24 @@
                                     <div class="action-group">
                                         <a asp-action="Details" asp-route-id="@m.MemberID"
                                            class="btn btn-sm btn-info">View</a>
-                                        <a asp-action="Edit" asp-route-id="@m.MemberID"
-                                           class="btn btn-sm btn-warning">Edit</a>
-                                        @if (m.IsActive)
+                                        @if (isAdmin)
                                         {
-                                            <form asp-action="Deactivate" asp-route-id="@m.MemberID" method="post">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-danger">Deactivate</button>
-                                            </form>
-                                        }
-                                        else
-                                        {
-                                            <form asp-action="Activate" asp-route-id="@m.MemberID" method="post">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-success">Activate</button>
-                                            </form>
+                                            <a asp-action="Edit" asp-route-id="@m.MemberID"
+                                               class="btn btn-sm btn-warning">Edit</a>
+                                            @if (m.IsActive)
+                                            {
+                                                <form asp-action="Deactivate" asp-route-id="@m.MemberID" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-danger">Deactivate</button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <form asp-action="Activate" asp-route-id="@m.MemberID" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-success">Activate</button>
+                                                </form>
+                                            }
                                         }
                                     </div>
                                 </td>
@@ -114,6 +132,8 @@
                 </tbody>
             </table>
         </div>
+
+        <partial name="_Pager" model="ViewBag.Pager" />
     </div>
 
 </div>

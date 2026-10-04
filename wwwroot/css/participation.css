@@ -1,0 +1,52 @@
+/* participation.css - module 3H */
+
+.participation-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 20px;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-100);
+    flex-wrap: wrap;
+}
+
+.participation-hint {
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+.participation-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--gray-100);
+    gap: 16px;
+    transition: background var(--transition);
+}
+
+.participation-row:last-child {
+    border-bottom: none;
+}
+
+.participation-row:hover {
+    background: var(--gray-50);
+}
+
+.participation-input {
+    flex: 0 0 240px;
+    max-width: 45%;
+}
+
+@media (max-width: 620px) {
+    .participation-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .participation-input {
+        flex: 1 1 auto;
+        max-width: none;
+    }
+}

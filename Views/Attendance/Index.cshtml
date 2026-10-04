@@ -92,14 +92,23 @@
                                     @if (count > 0)
                                     { <span class="badge badge-present">@count member(s)</span> }
                                     else
-                                    { <span style="color:var(--gray-400);font-size:12px;">Not recorded</span> }
+                                    { <span class="hint-cell">Not recorded</span> }
                                 </td>
                                 <td>
                                     <div class="action-group">
-                                        <a asp-action="Record" asp-route-id="@activity.ActivityID"
-                                           class="btn btn-sm btn-primary">
-                                            @(count > 0 ? "Update" : "Record")
-                                        </a>
+                                        @* P1.3: attendance cannot be recorded for a
+                                           cancelled activity, so offer only the history. *@
+                                        @if (activity.IsActive)
+                                        {
+                                            <a asp-action="Record" asp-route-id="@activity.ActivityID"
+                                               class="btn btn-sm btn-primary">
+                                                @(count > 0 ? "Update" : "Record")
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-inactive">Cancelled</span>
+                                        }
                                         @if (count > 0)
                                         {
                                             <a asp-action="Details" asp-route-id="@activity.ActivityID"
@@ -113,6 +122,8 @@
                 </table>
             </div>
         }
+
+        <partial name="_Pager" model="ViewBag.Pager" />
     </div>
 
 </div>

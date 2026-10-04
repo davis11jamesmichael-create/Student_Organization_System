@@ -166,3 +166,51 @@ img, svg {
     color: var(--gray-400);
     font-size: 12px;
 }
+
+/* ── Accessibility (AUDIT.md P3) ── */
+
+/* Keyboard-only "skip to content" link, off-screen until focused. */
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 1100;
+    padding: 10px 16px;
+    background: var(--primary);
+    color: var(--white);
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 0 0 var(--radius-sm) 0;
+}
+
+.skip-link:focus {
+    left: 0;
+    outline: 3px solid var(--gray-900);
+    outline-offset: 2px;
+}
+
+/* A visible ring for anything reached by the keyboard, without showing it on a
+   mouse click. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* Screen-reader-only text (visually hidden, still announced). */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+

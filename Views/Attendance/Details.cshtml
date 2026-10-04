@@ -18,9 +18,14 @@
                 &nbsp;·&nbsp; @activity?.Location
             </p>
         </div>
-        <div style="display:flex;gap:8px;">
-            <a asp-action="Record" asp-route-id="@activity?.ActivityID"
-               class="btn btn-primary">Update</a>
+        <div class="btn-row">
+            @* P1.3: a cancelled activity takes no new attendance, so no Update
+               button is offered and only the saved history stays visible. *@
+            @if (activity?.IsActive == true)
+            {
+                <a asp-action="Record" asp-route-id="@activity?.ActivityID"
+                   class="btn btn-primary">Update</a>
+            }
             <a asp-action="Index" class="btn btn-light">← Back</a>
         </div>
     </div>
@@ -30,6 +35,11 @@
         <div class="alert alert-success">@TempData["Success"]</div>
     }
 
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
     <div class="attendance-stats">
         <div class="attendance-stat">
             <div class="attendance-stat-label">Total Recorded</div>
@@ -37,11 +47,11 @@
         </div>
         <div class="attendance-stat">
             <div class="attendance-stat-label">Present</div>
-            <div class="attendance-stat-number" style="color:var(--success-dark);">@presentCount</div>
+            <div class="attendance-stat-number stat-number-success">@presentCount</div>
         </div>
         <div class="attendance-stat">
             <div class="attendance-stat-label">Absent</div>
-            <div class="attendance-stat-number" style="color:var(--danger-dark);">@absentCount</div>
+            <div class="attendance-stat-number stat-number-danger">@absentCount</div>
         </div>
     </div>
 
@@ -67,6 +77,7 @@
                             <th>Year Level</th>
                             <th>Status</th>
                             <th>Recorded At</th>
+                            <th>Updated At</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -84,6 +95,12 @@
                                     { <span class="badge badge-absent">Absent</span> }
                                 </td>
                                 <td>@r.RecordedAt.ToString("MMM dd, yyyy hh:mm tt")</td>
+                                <td>
+                                    @if (r.UpdatedAt.HasValue)
+                                    { @r.UpdatedAt.Value.ToString("MMM dd, yyyy hh:mm tt") }
+                                    else
+                                    { <span class="hint-cell">—</span> }
+                                </td>
                             </tr>
                         }
                     </tbody>

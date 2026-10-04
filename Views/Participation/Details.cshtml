@@ -1,0 +1,81 @@
+@model IEnumerable<StudentOrganizationSystem.Models.Participation>
+
+@{
+    ViewData["Title"] = "Participation Details";
+    var activity = ViewBag.Activity as StudentOrganizationSystem.Models.Activity;
+}
+
+<div class="page-container">
+
+    <div class="page-header">
+        <div class="page-header-text">
+            <h1>Participation Details</h1>
+            <p>
+                <strong>@activity?.ActivityTitle</strong>
+                &nbsp;·&nbsp; @activity?.ActivityDate.ToString("MMMM dd, yyyy")
+                &nbsp;·&nbsp; @activity?.Location
+            </p>
+        </div>
+        <div class="btn-row">
+            @if (activity?.IsActive == true)
+            {
+                <a asp-action="Record" asp-route-id="@activity?.ActivityID"
+                   class="btn btn-primary">Update</a>
+            }
+            <a asp-action="Index" class="btn btn-light">← Back</a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="table-card">
+        <div class="table-card-header">
+            <h2>Participation List</h2>
+            <span class="record-count">@Model.Count() record(s)</span>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="empty-state"><p>No participation records found.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Full Name</th>
+                            <th>Course</th>
+                            <th>Year Level</th>
+                            <th>Participation Type</th>
+                            <th>Recorded At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model)
+                        {
+                            <tr>
+                                <td>@r.Member?.StudentID</td>
+                                <td><strong>@r.Member?.FullName</strong></td>
+                                <td>@r.Member?.Course</td>
+                                <td>@r.Member?.YearLevel</td>
+                                <td><span class="badge badge-present">@r.ParticipationType</span></td>
+                                <td>@r.RecordedAt.ToString("MMM dd, yyyy hh:mm tt")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+</div>

@@ -1,0 +1,132 @@
+@model IEnumerable<StudentOrganizationSystem.Models.Activity>
+
+@{
+    ViewData["Title"] = "Participation";
+    var counts = ViewBag.ParticipationCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
+}
+
+<div class="page-container">
+
+    <div class="page-header">
+        <div class="page-header-text">
+            <h1>Participation</h1>
+            <p>Select an activity to record or view participation</p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="filter-card">
+        <form asp-action="Index" method="get" class="filter-form">
+            <div class="filter-group">
+                <label>Activity Title</label>
+                <input type="text" name="search" value="@ViewBag.Search"
+                       placeholder="Search title..." />
+            </div>
+            <div class="filter-group">
+                <label>Status</label>
+                <select name="status">
+                    <option value="">All</option>
+                    @if (ViewBag.Status == "Active") {
+                        <option value="Active" selected>Active</option>
+                        <option value="Inactive">Inactive</option>
+                    } else if (ViewBag.Status == "Inactive") {
+                        <option value="Active">Active</option>
+                        <option value="Inactive" selected>Inactive</option>
+                    } else {
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    }
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-secondary">Search</button>
+                <a asp-action="Index" class="btn btn-light">Clear</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-card">
+        <div class="table-card-header">
+            <h2>Activities</h2>
+            <span class="record-count">@Model.Count() record(s)</span>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="empty-state"><p>No activities found.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Date</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Participation</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var activity in Model)
+                        {
+                            var count = counts.ContainsKey(activity.ActivityID)
+                                ? counts[activity.ActivityID] : 0;
+                            <tr>
+                                <td><strong>@activity.ActivityTitle</strong></td>
+                                <td>@activity.ActivityDate.ToString("MMM dd, yyyy")</td>
+                                <td>@activity.Location</td>
+                                <td>
+                                    @if (activity.IsActive)
+                                    { <span class="badge badge-active">Active</span> }
+                                    else
+                                    { <span class="badge badge-inactive">Inactive</span> }
+                                </td>
+                                <td>
+                                    @if (count > 0)
+                                    { <span class="badge badge-present">@count member(s)</span> }
+                                    else
+                                    { <span class="hint-cell">Not recorded</span> }
+                                </td>
+                                <td>
+                                    <div class="action-group">
+                                        @if (activity.IsActive)
+                                        {
+                                            <a asp-action="Record" asp-route-id="@activity.ActivityID"
+                                               class="btn btn-sm btn-primary">
+                                                @(count > 0 ? "Update" : "Record")
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-inactive">Cancelled</span>
+                                        }
+                                        @if (count > 0)
+                                        {
+                                            <a asp-action="Details" asp-route-id="@activity.ActivityID"
+                                               class="btn btn-sm btn-info">View</a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <partial name="_Pager" model="ViewBag.Pager" />
+    </div>
+
+</div>

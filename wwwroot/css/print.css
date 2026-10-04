@@ -1,0 +1,74 @@
+/* print.css - a print-friendly view for report pages (module 3I) */
+
+.print-title {
+    display: none;
+}
+
+@media print {
+    /* Drop the app chrome and every interactive control. */
+    .sidebar,
+    .sidebar-backdrop,
+    .topbar,
+    .footer,
+    .filter-card,
+    .action-group,
+    .admin-note,
+    .btn,
+    .alert,
+    .no-print {
+        display: none !important;
+    }
+
+    /* Let the content use the whole page. */
+    html,
+    body {
+        background: #fff !important;
+    }
+
+    .app-shell,
+    .app-main,
+    .app-content,
+    .page-container,
+    .table-card {
+        display: block !important;
+        width: auto !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        overflow: visible !important;
+    }
+
+    .table-responsive {
+        overflow: visible !important;
+    }
+
+    .data-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+
+    .data-table th,
+    .data-table td {
+        border: 1px solid #999 !important;
+        padding: 4px 6px !important;
+        font-size: 11px !important;
+    }
+
+    .page-header h1 {
+        font-size: 16px !important;
+    }
+
+    .print-title {
+        display: block !important;
+        margin-bottom: 6px;
+        font-size: 11px;
+        color: #444;
+    }
+
+    /* Repeat table headers across pages where the browser supports it. */
+    thead {
+        display: table-header-group;
+    }
+}

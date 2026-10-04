@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using StudentOrganizationSystem.Data;
 using StudentOrganizationSystem.Models;
+using StudentOrganizationSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Add password hashing service
 builder.Services.AddScoped<IPasswordHasher<User>,
     PasswordHasher<User>>();
+
+// P1.9: a small, process-local brute-force guard for the sign-in form. The
+// tracker counts failures in IMemoryCache, so the cache must be registered.
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<LoginAttemptTracker>();
 
 // Add cookie authentication
 builder.Services.AddAuthentication(
@@ -65,7 +71,9 @@ using (var scope = app.Services.CreateScope())
 
         await DbInitializer.InitializeAsync(
             context,
-            passwordHasher);
+            passwordHasher,
+            // Dev-only sample data (AUDIT.md P1.12); never seeded in Production.
+            seedSampleData: app.Environment.IsDevelopment());
     }
     catch (Exception exception)
     {

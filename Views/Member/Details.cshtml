@@ -2,11 +2,25 @@
 
 @{
     ViewData["Title"] = "Member Details";
+
+    var isAdmin = User.IsInRole(AppRoles.Admin);
+
+    var membership = Model.Memberships.FirstOrDefault();
+
+    var recentAttendance = ViewBag.RecentAttendance as List<Attendance>
+                           ?? new List<Attendance>();
+    var recentParticipation = ViewBag.RecentParticipation as List<Participation>
+                              ?? new List<Participation>();
+
+    int presentCount = ViewBag.PresentCount as int? ?? 0;
+    int absentCount = ViewBag.AbsentCount as int? ?? 0;
+    int attendanceTotal = ViewBag.AttendanceTotal as int? ?? 0;
+    int participationCount = ViewBag.ParticipationCount as int? ?? 0;
 }
 
 <div class="form-container">
 
-    <div class="page-header" style="margin-bottom:20px;">
+    <div class="page-header form-head">
         <div class="page-header-text">
             <h1>Member Details</h1>
             <p>View member information</p>
@@ -59,11 +73,148 @@
             </div>
         }
 
+        <div class="details-row">
+            <span class="details-label">Membership</span>
+            <span class="details-value">
+                @if (membership == null)
+                { <span class="badge badge-inactive">Not set up</span> }
+                else if (membership.Status == MembershipStatus.Active)
+                { <span class="badge badge-active">Active</span> }
+                else if (membership.Status == MembershipStatus.Suspended)
+                { <span class="badge badge-suspended">Suspended</span> }
+                else
+                { <span class="badge badge-inactive">Inactive</span> }
+            </span>
+        </div>
+
+        @if (membership != null)
+        {
+            <div class="details-row">
+                <span class="details-label">Date Joined</span>
+                <span class="details-value">@membership.DateJoined.ToString("MMMM dd, yyyy")</span>
+            </div>
+
+            @if (membership.UpdatedAt.HasValue)
+            {
+                <div class="details-row">
+                    <span class="details-label">Standing Updated</span>
+                    <span class="details-value">@membership.UpdatedAt.Value.ToString("MMMM dd, yyyy hh:mm tt")</span>
+                </div>
+            }
+        }
+
         <div class="details-actions">
-            <a asp-action="Edit" asp-route-id="@Model.MemberID" class="btn btn-primary">Edit</a>
+            @if (isAdmin)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.MemberID" class="btn btn-primary">Edit</a>
+                <a asp-controller="Membership" asp-action="Edit" asp-route-id="@Model.MemberID"
+                   class="btn btn-warning">Membership</a>
+            }
             <a asp-action="Index" class="btn btn-light">Back to Members</a>
         </div>
 
+    </div>
+
+    <div class="section-title">History</div>
+
+    <div class="attendance-stats">
+        <div class="attendance-stat">
+            <div class="attendance-stat-label">Present</div>
+            <div class="attendance-stat-number stat-number-success">@presentCount</div>
+        </div>
+        <div class="attendance-stat">
+            <div class="attendance-stat-label">Absent</div>
+            <div class="attendance-stat-number stat-number-danger">@absentCount</div>
+        </div>
+        <div class="attendance-stat">
+            <div class="attendance-stat-label">Participation</div>
+            <div class="attendance-stat-number">@participationCount</div>
+        </div>
+    </div>
+
+    <p class="note-muted tight">
+        @attendanceTotal attendance record(s) in total. Showing the 10 most recent of each below.
+    </p>
+
+    <div class="table-card card-spaced">
+        <div class="table-card-header">
+            <h2>Recent Attendance</h2>
+            <a asp-controller="Attendance" asp-action="Index" class="btn btn-sm btn-light">All attendance</a>
+        </div>
+
+        @if (!recentAttendance.Any())
+        {
+            <div class="empty-state"><p>No attendance records.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Activity</th>
+                            <th>Status</th>
+                            <th>Recorded At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var a in recentAttendance)
+                        {
+                            <tr>
+                                <td>@a.Activity?.ActivityDate.ToString("MMM dd, yyyy")</td>
+                                <td>@a.Activity?.ActivityTitle</td>
+                                <td>
+                                    @if (a.Status == AttendanceStatus.Present)
+                                    { <span class="badge badge-present">Present</span> }
+                                    else
+                                    { <span class="badge badge-absent">Absent</span> }
+                                </td>
+                                <td>@a.RecordedAt.ToString("MMM dd, yyyy hh:mm tt")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <div class="table-card">
+        <div class="table-card-header">
+            <h2>Recent Participation</h2>
+            <a asp-controller="Participation" asp-action="Index" class="btn btn-sm btn-light">All participation</a>
+        </div>
+
+        @if (!recentParticipation.Any())
+        {
+            <div class="empty-state"><p>No participation records.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Activity</th>
+                            <th>Participation Type</th>
+                            <th>Recorded At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in recentParticipation)
+                        {
+                            <tr>
+                                <td>@p.Activity?.ActivityDate.ToString("MMM dd, yyyy")</td>
+                                <td>@p.Activity?.ActivityTitle</td>
+                                <td><span class="badge badge-present">@p.ParticipationType</span></td>
+                                <td>@p.RecordedAt.ToString("MMM dd, yyyy hh:mm tt")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </div>
 
 </div>

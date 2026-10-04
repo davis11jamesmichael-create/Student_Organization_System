@@ -2,6 +2,10 @@
 
 @{
     ViewData["Title"] = "Activities";
+
+    // Admin-only controls are hidden from Officers; the actions themselves are
+    // also guarded server-side (ActivityController Create/Edit/Activate/Deactivate).
+    var isAdmin = User.IsInRole(AppRoles.Admin);
 }
 
 <div class="page-container">
@@ -11,12 +15,23 @@
             <h1>Activities</h1>
             <p>Manage organization activities and events</p>
         </div>
-        <a asp-action="Create" class="btn btn-primary">+ Add Activity</a>
+        @if (isAdmin)
+        {
+            <a asp-action="Create" class="btn btn-primary">+ Add Activity</a>
+        }
     </div>
 
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (!isAdmin)
+    {
+        <div class="admin-note">
+            <span aria-hidden="true">🔒</span>
+            Signed in as Officer — admin-only actions (add, edit, cancel / activate) are hidden.
+        </div>
     }
 
     <div class="filter-card">
@@ -93,24 +108,27 @@
                                     <div class="action-group">
                                         <a asp-action="Details" asp-route-id="@a.ActivityID"
                                            class="btn btn-sm btn-info">View</a>
-                                        <a asp-action="Edit" asp-route-id="@a.ActivityID"
-                                           class="btn btn-sm btn-warning">Edit</a>
-                                        @if (a.IsActive)
+                                        @if (isAdmin)
                                         {
-                                            <form asp-action="Deactivate" asp-route-id="@a.ActivityID"
-                                                  method="post" style="display:inline;"
-                                                  onsubmit="return confirm('Cancel this activity?');">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
-                                            </form>
-                                        }
-                                        else
-                                        {
-                                            <form asp-action="Activate" asp-route-id="@a.ActivityID"
-                                                  method="post" style="display:inline;">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-success">Activate</button>
-                                            </form>
+                                            <a asp-action="Edit" asp-route-id="@a.ActivityID"
+                                               class="btn btn-sm btn-warning">Edit</a>
+                                            @if (a.IsActive)
+                                            {
+                                                <form asp-action="Deactivate" asp-route-id="@a.ActivityID"
+                                                      method="post" class="form-inline"
+                                                      data-confirm="Cancel this activity?">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <form asp-action="Activate" asp-route-id="@a.ActivityID"
+                                                      method="post" class="form-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-success">Activate</button>
+                                                </form>
+                                            }
                                         }
                                     </div>
                                 </td>
@@ -120,6 +138,8 @@
                 </table>
             </div>
         }
+
+        <partial name="_Pager" model="ViewBag.Pager" />
     </div>
 
 </div>

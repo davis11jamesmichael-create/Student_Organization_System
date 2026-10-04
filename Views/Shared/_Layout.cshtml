@@ -14,6 +14,12 @@
         userRole = "User";
     }
 
+    // Role split (AUDIT.md P0.6): Admins additionally see the "Administration"
+    // group. A "Member" login gets its own reduced navigation, because it cannot
+    // open any of the management pages (they are all Admin-or-Officer).
+    var isAdmin = User.IsInRole(AppRoles.Admin);
+    var isMember = User.IsInRole(AppRoles.Member);
+
     var pageTitle = ViewData["Title"]?.ToString() ?? "Dashboard";
 
     Func<string, bool> isActive = controller =>
@@ -23,8 +29,8 @@
     Func<string, string> navClass = controller =>
         isActive(controller) ? "nav-item active" : "nav-item";
 
-    Func<string, string> navAria = controller =>
-        isActive(controller) ? "page" : "false";
+    Func<string, string?> navAria = controller =>
+        isActive(controller) ? "page" : null;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -39,11 +45,15 @@
     <link rel="stylesheet" href="~/css/forms.css" />
     <link rel="stylesheet" href="~/css/tables.css" />
     <link rel="stylesheet" href="~/css/dashboard.css" />
-    <link rel="stylesheet" href="~/css/login.css" />
     <link rel="stylesheet" href="~/css/attendance.css" />
+    <link rel="stylesheet" href="~/css/participation.css" />
+    <link rel="stylesheet" href="~/css/print.css" />
     <link rel="stylesheet" href="~/css/responsive.css" />
 </head>
 <body>
+
+@* AUDIT.md P3: a keyboard user can jump straight past the navigation. *@
+<a class="skip-link" href="#main-content">Skip to main content</a>
 
 @if (isAuthenticated)
 {
@@ -61,14 +71,42 @@
 
             <nav class="sidebar-nav">
 
-                <div class="nav-section">
-                    <span class="nav-section-title">Overview</span>
-                    <a class="@navClass("Home")" aria-current="@navAria("Home")"
-                       asp-controller="Home" asp-action="Index">
-                        <span class="nav-icon">📊</span>
-                        <span class="nav-text">Dashboard</span>
-                    </a>
-                </div>
+                @if (isMember)
+                {
+                    @* A member can only reach the Portal, so the menu shows only
+                       the pages they can actually open. *@
+                    <div class="nav-section">
+                        <span class="nav-section-title">My Records</span>
+                        <a class="@navClass("Portal")" aria-current="@navAria("Portal")"
+                           asp-controller="Portal" asp-action="Index">
+                            <span class="nav-icon">🧾</span>
+                            <span class="nav-text">My Records</span>
+                        </a>
+                        <a class="nav-item" asp-controller="Portal" asp-action="Attendance">
+                            <span class="nav-icon">📋</span>
+                            <span class="nav-text">My Attendance</span>
+                        </a>
+                        <a class="nav-item" asp-controller="Portal" asp-action="Participation">
+                            <span class="nav-icon">🏅</span>
+                            <span class="nav-text">My Participation</span>
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="nav-section">
+                        <span class="nav-section-title">Overview</span>
+                        <a class="@navClass("Home")" aria-current="@navAria("Home")"
+                           asp-controller="Home" asp-action="Index">
+                            <span class="nav-icon">📊</span>
+                            <span class="nav-text">Dashboard</span>
+                        </a>
+                        <a class="@navClass("Search")" aria-current="@navAria("Search")"
+                           asp-controller="Search" asp-action="Index">
+                            <span class="nav-icon">🔍</span>
+                            <span class="nav-text">Search</span>
+                        </a>
+                    </div>
 
                 <div class="nav-section">
                     <span class="nav-section-title">Management</span>
@@ -82,12 +120,32 @@
                         <span class="nav-icon">📅</span>
                         <span class="nav-text">Activities</span>
                     </a>
-                    <a class="nav-item is-soon" href="#" tabindex="-1" aria-disabled="true">
+                    <a class="@navClass("Membership")" aria-current="@navAria("Membership")"
+                       asp-controller="Membership" asp-action="Index">
                         <span class="nav-icon">🪪</span>
                         <span class="nav-text">Membership</span>
-                        <span class="nav-soon">Soon</span>
                     </a>
                 </div>
+
+                @if (isAdmin)
+                {
+                    <div class="nav-section">
+                        <span class="nav-section-title">Administration</span>
+                        <a class="nav-item" asp-controller="Member" asp-action="Create">
+                            <span class="nav-icon">➕</span>
+                            <span class="nav-text">Add Member</span>
+                        </a>
+                        <a class="nav-item" asp-controller="Activity" asp-action="Create">
+                            <span class="nav-icon">🗓️</span>
+                            <span class="nav-text">Add Activity</span>
+                        </a>
+                        <a class="@navClass("User")" aria-current="@navAria("User")"
+                           asp-controller="User" asp-action="Index">
+                            <span class="nav-icon">🔑</span>
+                            <span class="nav-text">Users &amp; Roles</span>
+                        </a>
+                    </div>
+                }
 
                 <div class="nav-section">
                     <span class="nav-section-title">Tracking</span>
@@ -96,25 +154,30 @@
                         <span class="nav-icon">📋</span>
                         <span class="nav-text">Attendance</span>
                     </a>
-                    <a class="nav-item is-soon" href="#" tabindex="-1" aria-disabled="true">
+                    <a class="@navClass("Participation")" aria-current="@navAria("Participation")"
+                       asp-controller="Participation" asp-action="Index">
                         <span class="nav-icon">🏅</span>
                         <span class="nav-text">Participation</span>
-                        <span class="nav-soon">Soon</span>
                     </a>
                 </div>
 
                 <div class="nav-section">
                     <span class="nav-section-title">Insights</span>
-                    <a class="nav-item is-soon" href="#" tabindex="-1" aria-disabled="true">
+                    <a class="@navClass("Reports")" aria-current="@navAria("Reports")"
+                       asp-controller="Reports" asp-action="Index">
                         <span class="nav-icon">📈</span>
                         <span class="nav-text">Reports</span>
-                        <span class="nav-soon">Soon</span>
                     </a>
                 </div>
+                }
 
             </nav>
 
             <div class="sidebar-footer">
+                <a class="sidebar-signout" asp-controller="Account" asp-action="ChangePassword">
+                    <span aria-hidden="true">🔒</span>
+                    Change password
+                </a>
                 <form asp-controller="Account" asp-action="Logout" method="post">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="sidebar-signout">
@@ -148,11 +211,31 @@
                     <span>@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
                 </div>
 
+                <form class="topbar-search" asp-controller="Search" asp-action="Index"
+                      method="get" role="search">
+                    <input type="search" name="q" value="@Context.Request.Query["q"]"
+                           placeholder="Search members or activities" aria-label="Search" />
+                </form>
+
                 <div class="topbar-actions">
                     <div class="topbar-user">
                         <span class="avatar avatar-sm">@userInitial</span>
                         <span class="topbar-user-text">
-                            <span class="topbar-user-name">@userName</span>
+                            <span class="topbar-user-name">
+                                @userName
+                                @if (isMember)
+                                {
+                                    <span class="badge-role badge-member">Member</span>
+                                }
+                                else if (isAdmin)
+                                {
+                                    <span class="badge-role badge-admin">Admin</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-role badge-officer">Officer</span>
+                                }
+                            </span>
                             <span class="topbar-user-role">@userRole</span>
                         </span>
                     </div>
@@ -160,7 +243,7 @@
 
             </header>
 
-            <main class="app-content">
+            <main class="app-content" id="main-content">
                 @RenderBody()
             </main>
 
@@ -174,7 +257,7 @@
 }
 else
 {
-    <main class="main-content">
+    <main class="main-content" id="main-content">
         @RenderBody()
     </main>
 

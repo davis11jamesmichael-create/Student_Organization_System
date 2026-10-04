@@ -20,6 +20,13 @@ namespace StudentOrganizationSystem.Models
 
         public DateTime RecordedAt { get; set; } = DateTime.Now;
 
+        /// <summary>
+        /// Set only when an existing record's status changes (AUDIT.md P1.8 /
+        /// decision D4). <see cref="RecordedAt"/> keeps the first time the member
+        /// was marked, so the original history is never overwritten.
+        /// </summary>
+        public DateTime? UpdatedAt { get; set; }
+
         [ForeignKey("ActivityID")]
         public Activity? Activity { get; set; }
 

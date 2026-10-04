@@ -1,5 +1,10 @@
 @{
     ViewData["Title"] = "Access Denied";
+
+    // The hardcoded "Return to Dashboard" link used to point at Home/Index for
+    // everyone. A Member cannot open Home/Index, so for them the button would
+    // bounce straight back to this page. Send each role where it can actually go.
+    var isMember = User.IsInRole(AppRoles.Member);
 }
 
 <div class="page-container">
@@ -13,9 +18,27 @@
             Please sign in with an account that has the required role.
         </p>
 
-        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
-            Return to Dashboard
-        </a>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            @if (isMember)
+            {
+                <a asp-controller="Portal" asp-action="Index" class="btn btn-primary">
+                    Go to My Records
+                </a>
+            }
+            else
+            {
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+                    Return to Dashboard
+                </a>
+            }
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Login" class="btn btn-primary">
+                Sign in
+            </a>
+        }
 
     </div>
 

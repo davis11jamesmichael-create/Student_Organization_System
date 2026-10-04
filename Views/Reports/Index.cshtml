@@ -1,0 +1,44 @@
+@{
+    ViewData["Title"] = "Reports";
+}
+
+<div class="page-container">
+
+    <div class="page-header">
+        <div class="page-header-text">
+            <h1>Reports</h1>
+            <p>Read-only summaries you can print or save</p>
+        </div>
+    </div>
+
+    <div class="section-title">Available Reports</div>
+
+    <div class="quick-grid">
+
+        <a asp-action="Attendance" class="quick-card">
+            <div class="quick-card-icon">📋</div>
+            <div class="quick-card-text">
+                <h3>Attendance by Activity</h3>
+                <p>Present / absent counts and rate per activity</p>
+            </div>
+            <span class="quick-card-arrow" aria-hidden="true">→</span>
+        </a>
+
+        <a asp-action="Members" class="quick-card">
+            <div class="quick-card-icon">🏅</div>
+            <div class="quick-card-text">
+                <h3>Member Summary</h3>
+                <p>Attendance rate and participation per member</p>
+            </div>
+            <span class="quick-card-arrow" aria-hidden="true">→</span>
+        </a>
+
+    </div>
+
+    <div class="admin-note">
+        <span aria-hidden="true">🖨️</span>
+        Every report has a <strong>Print</strong> button. The print layout hides the
+        menu and controls, so only the table is printed.
+    </div>
+
+</div>

@@ -82,6 +82,9 @@ namespace StudentOrganizationSystem.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.HasKey("AttendanceID");
 
                     b.HasIndex("MemberID");
@@ -161,7 +164,8 @@ namespace StudentOrganizationSystem.Migrations
 
                     b.HasKey("MembershipID");
 
-                    b.HasIndex("MemberID");
+                    b.HasIndex("MemberID")
+                        .IsUnique();
 
                     b.ToTable("Memberships");
                 });
@@ -230,6 +234,9 @@ namespace StudentOrganizationSystem.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<int?>("MemberID")
+                        .HasColumnType("int");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -244,6 +251,9 @@ namespace StudentOrganizationSystem.Migrations
                         .HasColumnType("varchar(50)");
 
                     b.HasKey("UserID");
+
+                    b.HasIndex("MemberID")
+                        .IsUnique();
 
                     b.HasIndex("RoleID");
 
@@ -304,11 +314,18 @@ namespace StudentOrganizationSystem.Migrations
 
             modelBuilder.Entity("StudentOrganizationSystem.Models.User", b =>
                 {
+                    b.HasOne("StudentOrganizationSystem.Models.Member", "Member")
+                        .WithOne("User")
+                        .HasForeignKey("StudentOrganizationSystem.Models.User", "MemberID")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("StudentOrganizationSystem.Models.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Member");
 
                     b.Navigation("Role");
                 });
@@ -327,6 +344,8 @@ namespace StudentOrganizationSystem.Migrations
                     b.Navigation("Memberships");
 
                     b.Navigation("Participations");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("StudentOrganizationSystem.Models.Role", b =>

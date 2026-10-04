@@ -63,7 +63,19 @@
 }
 
 .radio-option input[type="radio"] {
-    display: none;
+    /* Hidden visually but kept focusable, so the keyboard can still reach the
+       group (AUDIT.md P3). display:none would remove it from the tab order. */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+}
+
+/* The chosen radio shows a clear keyboard-focus ring on its label. */
+.radio-option:focus-within {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
 }
 
 .radio-option:hover {
@@ -83,6 +95,35 @@
     background: var(--danger-light);
     border-color: var(--danger);
     color: var(--danger-dark);
+}
+
+/* ── Attendance bulk toolbar ── */
+
+.attendance-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 20px;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-100);
+    flex-wrap: wrap;
+}
+
+.attendance-toolbar-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.attendance-counter {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--danger-dark);
+}
+
+.attendance-counter.is-clear {
+    color: var(--success-dark);
 }
 
 /* ── Attendance summary stats ── */

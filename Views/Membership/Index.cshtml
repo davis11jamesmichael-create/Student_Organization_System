@@ -1,0 +1,163 @@
+@model IEnumerable<StudentOrganizationSystem.Models.MembershipViewModel>
+
+@{
+    ViewData["Title"] = "Membership";
+
+    var isAdmin = User.IsInRole(AppRoles.Admin);
+    var unset = ViewBag.UnsetCount as int? ?? 0;
+}
+
+<div class="page-container">
+
+    <div class="page-header">
+        <div class="page-header-text">
+            <h1>Membership</h1>
+            <p>Membership standing for every member</p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (!isAdmin)
+    {
+        <div class="admin-note">
+            <span aria-hidden="true">🔒</span>
+            Signed in as Officer — changing a membership standing is Admin-only.
+        </div>
+    }
+
+    <div class="filter-card">
+        <form asp-action="Index" method="get" class="filter-form">
+            <div class="filter-group">
+                <label>Search</label>
+                <input type="text" name="search" value="@ViewBag.Search"
+                       placeholder="Name or Student ID" />
+            </div>
+            <div class="filter-group">
+                <label>Standing</label>
+                <select name="status">
+                    <option value="">All</option>
+                    @foreach (var option in MembershipStatus.All)
+                    {
+                        if (ViewBag.Status == option)
+                        {
+                            <option value="@option" selected>@option</option>
+                        }
+                        else
+                        {
+                            <option value="@option">@option</option>
+                        }
+                    }
+                    @if (ViewBag.Status == "None")
+                    {
+                        <option value="None" selected>Not set up</option>
+                    }
+                    else
+                    {
+                        <option value="None">Not set up</option>
+                    }
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-secondary">Search</button>
+                <a asp-action="Index" class="btn btn-light">Clear</a>
+            </div>
+        </form>
+    </div>
+
+    @if (unset > 0)
+    {
+        <div class="admin-note">
+            <span aria-hidden="true">🪪</span>
+            @unset member(s) have no membership record yet. Opening one and saving creates it.
+        </div>
+    }
+
+    <div class="table-card">
+        <div class="table-card-header">
+            <h2>Membership List</h2>
+            <span class="record-count">@Model.Count() record(s)</span>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Full Name</th>
+                        <th>Course</th>
+                        <th>Year Level</th>
+                        <th>Member</th>
+                        <th>Standing</th>
+                        <th>Date Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        foreach (var row in Model)
+                        {
+                            <tr>
+                                <td>@row.StudentID</td>
+                                <td><strong>@row.FullName</strong></td>
+                                <td>@row.Course</td>
+                                <td>@row.YearLevel</td>
+                                <td>
+                                    @if (row.IsActive)
+                                    { <span class="badge badge-active">Active</span> }
+                                    else
+                                    { <span class="badge badge-inactive">Inactive</span> }
+                                </td>
+                                <td>
+                                    @if (row.Status == MembershipStatus.Active)
+                                    { <span class="badge badge-active">Active</span> }
+                                    else if (row.Status == MembershipStatus.Suspended)
+                                    { <span class="badge badge-suspended">Suspended</span> }
+                                    else if (row.Status == MembershipStatus.Inactive)
+                                    { <span class="badge badge-inactive">Inactive</span> }
+                                    else
+                                    { <span class="badge badge-inactive">Not set up</span> }
+                                </td>
+                                <td>
+                                    @if (row.DateJoined.HasValue)
+                                    { @row.DateJoined.Value.ToString("MMM dd, yyyy") }
+                                    else
+                                    { <span class="hint-cell">—</span> }
+                                </td>
+                                <td>
+                                    <div class="action-group">
+                                        @if (isAdmin)
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@row.MemberID"
+                                               class="btn btn-sm btn-warning">
+                                                @(row.IsNew ? "Add" : "Edit")
+                                            </a>
+                                        }
+                                        <a asp-controller="Member" asp-action="Details"
+                                           asp-route-id="@row.MemberID"
+                                           class="btn btn-sm btn-info">View</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="8"><div class="empty-state"><p>No members found.</p></div></td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <partial name="_Pager" model="ViewBag.Pager" />
+    </div>
+
+</div>

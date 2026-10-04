@@ -1,0 +1,159 @@
+@model StudentOrganizationSystem.Models.SearchResultsViewModel
+
+@{
+    ViewData["Title"] = "Search";
+
+    var isAdmin = User.IsInRole(AppRoles.Admin);
+}
+
+<div class="page-container">
+
+    <div class="page-header">
+        <div class="page-header-text">
+            <h1>Search</h1>
+            <p>
+                @if (Model.HasQuery)
+                { <text>@Model.Total result(s) for “@Model.Query”</text> }
+                else
+                { <text>Search members and activities</text> }
+            </p>
+        </div>
+    </div>
+
+    <div class="filter-card">
+        <form asp-action="Index" method="get" class="filter-form">
+            <div class="filter-group">
+                <label>Search</label>
+                <input type="text" name="q" value="@Model.Query"
+                       placeholder="Name, Student ID, course, activity or location" />
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-secondary">Search</button>
+                <a asp-action="Index" class="btn btn-light">Clear</a>
+            </div>
+        </form>
+    </div>
+
+    @if (!Model.HasQuery)
+    {
+        <div class="empty-state">
+            <p>Type a term above to search members and activities.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-card card-spaced">
+            <div class="table-card-header">
+                <h2>Members</h2>
+                <span class="record-count">@Model.Members.Count result(s)</span>
+            </div>
+
+            @if (!Model.Members.Any())
+            {
+                <div class="empty-state"><p>No matching members.</p></div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Full Name</th>
+                                <th>Course</th>
+                                <th>Year Level</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var m in Model.Members)
+                            {
+                                <tr>
+                                    <td>@m.StudentID</td>
+                                    <td><strong>@m.FullName</strong></td>
+                                    <td>@m.Course</td>
+                                    <td>@m.YearLevel</td>
+                                    <td>
+                                        @if (m.IsActive)
+                                        { <span class="badge badge-active">Active</span> }
+                                        else
+                                        { <span class="badge badge-inactive">Inactive</span> }
+                                    </td>
+                                    <td>
+                                        <div class="action-group">
+                                            <a asp-controller="Member" asp-action="Details"
+                                               asp-route-id="@m.MemberID"
+                                               class="btn btn-sm btn-info">View</a>
+                                            @if (isAdmin)
+                                            {
+                                                <a asp-controller="Member" asp-action="Edit"
+                                                   asp-route-id="@m.MemberID"
+                                                   class="btn btn-sm btn-warning">Edit</a>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        <div class="table-card">
+            <div class="table-card-header">
+                <h2>Activities</h2>
+                <span class="record-count">@Model.Activities.Count result(s)</span>
+            </div>
+
+            @if (!Model.Activities.Any())
+            {
+                <div class="empty-state"><p>No matching activities.</p></div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Date</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var a in Model.Activities)
+                            {
+                                <tr>
+                                    <td><strong>@a.ActivityTitle</strong></td>
+                                    <td>@a.ActivityDate.ToString("MMM dd, yyyy")</td>
+                                    <td>@a.Location</td>
+                                    <td>
+                                        @if (a.IsActive)
+                                        { <span class="badge badge-active">Active</span> }
+                                        else
+                                        { <span class="badge badge-inactive">Inactive</span> }
+                                    </td>
+                                    <td>
+                                        <div class="action-group">
+                                            <a asp-controller="Activity" asp-action="Details"
+                                               asp-route-id="@a.ActivityID"
+                                               class="btn btn-sm btn-info">View</a>
+                                            <a asp-controller="Attendance" asp-action="Details"
+                                               asp-route-id="@a.ActivityID"
+                                               class="btn btn-sm btn-light">Attendance</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+
+</div>

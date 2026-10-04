@@ -17,22 +17,45 @@
   - [x] P0.5 `todo.md` kept honest (this list)
   - [x] P0.6 Roles enforced (decision D3): `Edit` / `Activate` / `Deactivate` are Admin-only;
         reading, registering and recording attendance stay open to any signed-in user
-- [ ] Next: **Phase 1 - correctness pass over the existing modules** (P1.1-P1.10 below)
+  - [x] P0.6 follow-up (2026-10-02): `Create` is Admin-only too, and every Admin-only control
+        (Add, Edit, Activate/Deactivate) is hidden from Officers; Admins get an "Administration"
+        nav group and an Admin badge. Verified at runtime as Admin and as a throw-away Officer.
+- [x] **Phase 3 - polish and testing - DONE and verified (2026-10-03)**
+      Each item has a "Done in Phase 3" note in `AUDIT.md` section 5; `progress.md` section 20
+      holds the checks:
+  - [x] Dead CSS removed: `site.css` deleted, `login.css` taken off `_Layout` (it now loads only
+        on the standalone Login and Register pages)
+  - [x] Views cleaned: no inline `style="..."`, no inline `onsubmit=`/`onchange=`/`onclick=`, no
+        inline `<script>` blocks - the confirmations moved to `data-confirm` handled by `site.js`
+  - [x] jQuery + jQuery Validation vendored into `wwwroot/lib` (no jsDelivr/CDN dependency)
+  - [x] Pagination on Members / Activities / Attendance / Membership / Participation: shared
+        `Data/Paging.cs` + `_Pager.cshtml`, 20 per page, filters carried in the links, wild pages
+        such as `?page=999` clamped instead of rendering empty
+  - [x] Accessibility: skip link to `<main id="main-content">`, `aria-current` omitted when
+        inactive, `:focus-visible` ring on links/buttons/inputs/radios, labelled pager nav
+  - [x] New `StudentOrganizationSystem.Tests` xUnit project - **35 tests, all green**
+        (`dotnet test`); duplicate-key tests use SQLite `:memory:` so unique indexes are enforced
+  - [x] Development-only seed data (`DbInitializer.SeedSampleDataAsync`): 5 members, 3 activities,
+        attendance + participation history and an `officer` / `officer123` account; verified
+        idempotent on a throw-away database and verified **not** to run when
+        `ASPNETCORE_ENVIRONMENT=Production`
 
 ---
 
-## Phase 1 - correctness pass (see AUDIT.md section 7)
+## Phase 1 - correctness pass (see AUDIT.md section 7) — DONE and verified at runtime
 
-- [ ] P1.1 Attendance marks every member "Present" by default - tri-state + "mark all" buttons (decision D1)
-- [ ] P1.2 Attendance status is unvalidated free text - whitelist it server-side
-- [ ] P1.3 Attendance can still be recorded for a cancelled activity
-- [ ] P1.4 Duplicate keys (`StudentID`, attendance) throw an unhandled 500 - catch `DbUpdateException`
-- [ ] P1.5 Dead concurrency handling in Member `Edit` (no concurrency token exists)
-- [ ] P1.6 Inputs are never trimmed or format-checked (`StudentID`, names, dates)
-- [ ] P1.7 Attendance POST runs one query per member (N+1) - load in one query
-- [ ] P1.8 Updating attendance overwrites the original `RecordedAt` (decision D4)
-- [ ] P1.9 Login: rehash old hashes, honour `returnUrl`, limit attempts, change password
-- [ ] P1.10 Query tightening (dashboard counters, `AsNoTracking()` on read-only queries)
+- [x] P1.1 Attendance marks every member "Present" by default - tri-state + "mark all" buttons (decision D1)
+- [x] P1.2 Attendance status is unvalidated free text - whitelist it server-side
+- [x] P1.3 Attendance can still be recorded for a cancelled activity
+- [x] P1.4 Duplicate keys (`StudentID`, attendance) throw an unhandled 500 - catch `DbUpdateException`
+- [x] P1.5 Dead concurrency handling in Member `Edit` (no concurrency token exists)
+- [x] P1.6 Inputs are never trimmed or format-checked (`StudentID`, names, dates)
+- [x] P1.7 Attendance POST runs one query per member (N+1) - load in one query
+- [x] P1.8 Updating attendance overwrites the original `RecordedAt` (decision D4)
+- [x] P1.9 Login: rehash old hashes, honour `returnUrl`, limit attempts, change password
+- [x] P1.10 Query tightening (dashboard counters, `AsNoTracking()` on read-only queries)
+      Each item has a "Done in Phase 1" note in `AUDIT.md`, and `progress.md` section 18
+      holds the verification script and the 26/26 result. Decisions D1 and D4 were taken.
 
 ---
 
@@ -104,30 +127,47 @@
 
 ---
 
-## Upcoming Modules (not yet started)
+## Modules 3G-3J (DONE - 2026-10-03)
 
 - [x] **3F — Attendance Management** ✅ DONE
 
 ---
 
-- [ ] **3G — Membership Management**
-  - List memberships per member
-  - Add/update membership status
-  - View membership history
+- [x] **3G — Membership Management** ✅ DONE
+  - `MembershipController` + `Membership/Index` and `Membership/Edit`
+  - One membership row per member (unique index, migration `AddUniqueMembershipPerMember`)
+  - Standing Active/Suspended (decision D2); "Inactive" mirrors `Member.IsActive`
+  - History shown on Member Details (standing, counters, recent records)
 
-- [ ] **3H — Participation Monitoring**
-  - Record participation type per activity per member
-  - View participation history
+- [x] **3H — Participation Monitoring** ✅ DONE
+  - `ParticipationController` + `Participation/Index`, `Record`, `Details`
+  - Upsert per the `(ActivityID, MemberID)` unique index; blank clears the row
+  - Free-text type with a datalist of suggestions, trimmed and length-checked
 
-- [ ] **3I — Reports**
-  - Attendance summary per activity
-  - Member participation summary
-  - Export or print-friendly view
+- [x] **3I — Reports** ✅ DONE
+  - `ReportsController` + `Reports/Index`, `Attendance`, `Members`
+  - Per-activity summary (present/absent/rate) and per-member summary
+  - Print-friendly view via `wwwroot/css/print.css` and a Print button
 
-- [ ] **3J — Search/Filtering (cross-module)**
-  - Already partially done in Members and Activities
-  - May need a unified search page
+- [x] **3J — Search/Filtering (cross-module)** ✅ DONE
+  - Topbar search box + `SearchController`/`Search/Index` results page
+  - Members (ID/name/course) and Activities (title/location); each list keeps its own filters
 
+## Module 3K — Users, Roles & Member Portal (DONE - 2026-10-02)
+
+- [x] Third role: **Member** (`AppRoles.Member`, plus `AdminOrOfficer`)
+- [x] `Users.MemberID` link + migration `AddUserMemberLink` (unique index, Restrict FK)
+- [x] Public self-registration (`Account/Register`) - creates Member + User **inactive**
+- [x] Approval gate: pending accounts cannot sign in; `User/Approve` activates both rows
+- [x] `UserController` - create, edit, approve, reject, activate, deactivate, reset password
+- [x] Last-admin guard (cannot deactivate/demote the only admin, or deactivate yourself)
+- [x] Read-only Member **Portal** (own profile, attendance, participation)
+- [x] Management controllers restricted to `AppRoles.AdminOrOfficer`
+- [x] Role-aware sidebar, role badges, role-aware AccessDenied button
+- [x] `Account/ChangePassword` (also closes the `SuccessRehashNeeded` half of P1.9)
+- [x] Verified end to end at runtime (register -> pending -> approve -> portal -> role limits)
+
+---
 ---
 
 ## Pre-Launch Checklist (do on leader's laptop)

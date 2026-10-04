@@ -1,0 +1,106 @@
+@model StudentOrganizationSystem.Models.MembershipViewModel
+
+@{
+    ViewData["Title"] = Model.IsNew ? "Add Membership" : "Edit Membership";
+
+    var statuses = StudentOrganizationSystem.Models.MembershipStatus.Selectable;
+}
+
+<div class="form-container">
+
+    <div class="page-header form-head">
+        <div class="page-header-text">
+            <h1>@(Model.IsNew ? "Add Membership" : "Edit Membership")</h1>
+            <p>Membership standing for @Model.FullName</p>
+        </div>
+        <a asp-action="Index" class="btn btn-light">← Back</a>
+    </div>
+
+    <div class="form-card">
+
+        <div class="details-row">
+            <span class="details-label">Student ID</span>
+            <span class="details-value">@Model.StudentID</span>
+        </div>
+
+        <div class="details-row">
+            <span class="details-label">Full Name</span>
+            <span class="details-value"><strong>@Model.FullName</strong></span>
+        </div>
+
+        <div class="details-row">
+            <span class="details-label">Member</span>
+            <span class="details-value">
+                @if (Model.IsActive)
+                { <span class="badge badge-active">Active</span> }
+                else
+                { <span class="badge badge-inactive">Inactive</span> }
+            </span>
+        </div>
+
+        <div class="details-row">
+            <span class="details-label">Date Joined</span>
+            <span class="details-value">
+                @(Model.DateJoined?.ToString("MMMM dd, yyyy") ?? "—")
+            </span>
+        </div>
+
+        @if (Model.UpdatedAt.HasValue)
+        {
+            <div class="details-row">
+                <span class="details-label">Last Updated</span>
+                <span class="details-value">@Model.UpdatedAt.Value.ToString("MMMM dd, yyyy hh:mm tt")</span>
+            </div>
+        }
+
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="MemberID" />
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+            @if (!Model.IsActive)
+            {
+                <div class="admin-note">
+                    <span aria-hidden="true">⚠️</span>
+                    This member is deactivated, so the standing is <strong>Inactive</strong>.
+                    Activate the member on the Members screen to set Active or Suspended.
+                </div>
+            }
+
+            <div class="form-group">
+                <label asp-for="Status">Standing</label>
+                <select asp-for="Status" class="form-control" disabled="@(!Model.IsActive)">
+                    @foreach (var option in statuses)
+                    {
+                        <option value="@option">@option</option>
+                    }
+                </select>
+                <span asp-validation-for="Status" class="validation-message"></span>
+                @if (!Model.IsActive)
+                {
+                    @* A disabled select posts nothing, so carry the standing value. *@
+                    <input type="hidden" name="Status" value="@Model.Status" />
+                }
+            </div>
+
+            <p class="form-hint">
+                <strong>Active</strong> — a member in good standing.
+                <strong>Suspended</strong> — still on the roster but not in good standing.
+                <strong>Inactive</strong> — set automatically when a member is deactivated.
+            </p>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    @(Model.IsNew ? "Add Membership" : "Save Standing")
+                </button>
+                <a asp-action="Index" class="btn btn-light">Cancel</a>
+            </div>
+        </form>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

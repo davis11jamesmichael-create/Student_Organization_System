@@ -4,6 +4,10 @@
     ViewData["Title"] = "Dashboard";
 
     var userName = User.Identity?.Name ?? "User";
+
+    // "+ Add Member" is admin-only (MemberController.Create is Admin-guarded);
+    // recording attendance stays open to Officers.
+    var isAdmin = User.IsInRole(AppRoles.Admin);
 }
 
 <div class="page-container">
@@ -19,9 +23,12 @@
         </div>
 
         <div class="dashboard-hero-actions">
-            <a asp-controller="Member" asp-action="Create" class="hero-btn">
-                + Add Member
-            </a>
+            @if (isAdmin)
+            {
+                <a asp-controller="Member" asp-action="Create" class="hero-btn">
+                    + Add Member
+                </a>
+            }
             <a asp-controller="Attendance" asp-action="Index"
                class="hero-btn hero-btn-outline">
                 Record Attendance
@@ -119,32 +126,32 @@
             <span class="quick-card-arrow" aria-hidden="true">→</span>
         </a>
 
-        <div class="quick-card is-soon">
+        <a asp-controller="Membership" asp-action="Index" class="quick-card">
             <div class="quick-card-icon">🪪</div>
             <div class="quick-card-text">
                 <h3>Membership</h3>
                 <p>Monitor membership status</p>
             </div>
-            <span class="chip-soon">Soon</span>
-        </div>
+            <span class="quick-card-arrow" aria-hidden="true">→</span>
+        </a>
 
-        <div class="quick-card is-soon">
+        <a asp-controller="Participation" asp-action="Index" class="quick-card">
             <div class="quick-card-icon">🏅</div>
             <div class="quick-card-text">
                 <h3>Participation</h3>
                 <p>Monitor member participation</p>
             </div>
-            <span class="chip-soon">Soon</span>
-        </div>
+            <span class="quick-card-arrow" aria-hidden="true">→</span>
+        </a>
 
-        <div class="quick-card is-soon">
+        <a asp-controller="Reports" asp-action="Index" class="quick-card">
             <div class="quick-card-icon">📈</div>
             <div class="quick-card-text">
                 <h3>Reports</h3>
                 <p>View records and reports</p>
             </div>
-            <span class="chip-soon">Soon</span>
-        </div>
+            <span class="quick-card-arrow" aria-hidden="true">→</span>
+        </a>
 
     </div>
 

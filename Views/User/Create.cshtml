@@ -1,0 +1,85 @@
+@model StudentOrganizationSystem.Models.UserFormViewModel
+
+@{
+    ViewData["Title"] = "Add User";
+
+    var roles = ViewBag.Roles as List<StudentOrganizationSystem.Models.Role>
+                ?? new List<StudentOrganizationSystem.Models.Role>();
+}
+
+<div class="form-container">
+
+    <div class="page-header form-head">
+        <div class="page-header-text">
+            <h1>Add User</h1>
+            <p>Create an Admin, Officer or Member account</p>
+        </div>
+        <a asp-action="Index" class="btn btn-light">← Back</a>
+    </div>
+
+    <div class="form-card">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+            <div class="form-group">
+                <label asp-for="Username">Username</label>
+                <input asp-for="Username" class="form-control" autocomplete="off" />
+                <span asp-validation-for="Username" class="validation-message"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Password">Password</label>
+                <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                <span asp-validation-for="Password" class="validation-message"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="ConfirmPassword">Confirm Password</label>
+                <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                <span asp-validation-for="ConfirmPassword" class="validation-message"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="RoleID">Role</label>
+                <select asp-for="RoleID" class="form-control">
+                    <option value="">— Choose a role —</option>
+                    @foreach (var role in roles)
+                    {
+                        <option value="@role.RoleID">@role.RoleName</option>
+                    }
+                </select>
+                <span asp-validation-for="RoleID" class="validation-message"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="MemberID">Linked Member</label>
+                <select asp-for="MemberID" class="form-control"
+                        asp-items="@(ViewBag.MemberOptions as Microsoft.AspNetCore.Mvc.Rendering.SelectList)">
+                    <option value="">— Not linked —</option>
+                </select>
+                <span class="validation-message validation-hint">
+                    Required only for the Member role.
+                </span>
+                <span asp-validation-for="MemberID" class="validation-message"></span>
+            </div>
+
+            <div class="form-group checkbox-row">
+                <label class="remember-row">
+                    <input asp-for="IsActive" />
+                    Account is active
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Create Account</button>
+                <a asp-action="Index" class="btn btn-light">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

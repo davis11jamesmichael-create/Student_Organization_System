@@ -6,7 +6,7 @@
 
 <div class="form-container">
 
-    <div class="page-header" style="margin-bottom:20px;">
+    <div class="page-header form-head">
         <div class="page-header-text">
             <h1>Edit Activity</h1>
             <p>Update activity information</p>
@@ -39,7 +39,7 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="Description">Description <span style="font-weight:400;color:var(--gray-400);">(optional)</span></label>
+                <label asp-for="Description">Description <span class="label-hint">(optional)</span></label>
                 <textarea asp-for="Description" class="form-control" rows="4"></textarea>
                 <span asp-validation-for="Description" class="validation-message"></span>
             </div>

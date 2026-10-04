@@ -1,0 +1,70 @@
+@model IEnumerable<StudentOrganizationSystem.Models.Attendance>
+
+@{
+    ViewData["Title"] = "My Attendance";
+
+    var member = ViewBag.Member as StudentOrganizationSystem.Models.Member;
+}
+
+<div class="page-container">
+
+    <div class="page-header">
+        <div class="page-header-text">
+            <h1>My Attendance</h1>
+            <p>@member?.FullName &middot; @member?.StudentID</p>
+        </div>
+        <a asp-action="Index" class="btn btn-light">← My Records</a>
+    </div>
+
+    <div class="table-card">
+
+        <div class="table-card-header">
+            <h2>Attendance History</h2>
+            <span class="record-count">@Model.Count() record(s)</span>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="empty-state">
+                <p>No attendance has been recorded for you yet.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Activity</th>
+                            <th>Date</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Recorded</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var record in Model)
+                        {
+                            <tr>
+                                <td><strong>@record.Activity?.ActivityTitle</strong></td>
+                                <td>@record.Activity?.ActivityDate.ToString("MMM dd, yyyy")</td>
+                                <td>@record.Activity?.Location</td>
+                                <td>
+                                    @if (record.Status == "Present")
+                                    { <span class="badge badge-present">Present</span> }
+                                    else if (record.Status == "Absent")
+                                    { <span class="badge badge-absent">Absent</span> }
+                                    else
+                                    { <span class="badge badge-inactive">@record.Status</span> }
+                                </td>
+                                <td>@record.RecordedAt.ToString("MMM dd, yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+    </div>
+
+</div>

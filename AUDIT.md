@@ -45,10 +45,12 @@ Runtime evidence (not just reading code):
   printed one readable message and exited with code 1. Full detail in the Phase 0 section of the work
   plan below.
 
-Still NOT verified at runtime (see section 8 before relying on them):
+Runtime behaviours that were open before Phase 1 and are now resolved:
 
-- Whether `attendance[<MemberID>]` binds into `Dictionary<int, string>` with `[FromForm]`
-- Whether `<select asp-for="IsActive">` pre-selects the saved value on the Edit pages
+- `attendance[<MemberID>]` binds into `Dictionary<int, string>` with `[FromForm]` - confirmed in
+  Phase 1 by saving attendance through the real form and reading it back.
+- `<select asp-for="IsActive">` pre-selects the saved value on both Edit pages - confirmed in
+  Phase 1 (member 1 and activity 1 render `<option value="true" selected="selected">`).
 
 ---
 
@@ -219,12 +221,30 @@ seeded password hash, deleted afterwards): every read page returned 200, `GET /M
 `GET /Activity/Edit/1` and `POST /Member/Deactivate/1` were all refused with a redirect to
 `/Account/AccessDenied`, and `Members.IsActive` stayed at 1.
 
-Still open (moved to Phase 2, item 4): the user/role screen, without which no real Officer account
-can be created, plus hiding the buttons a non-admin cannot use.
+**Closed 2026-10-02:** the user/role screen now exists (`UserController`), so a real Officer or
+Member account can be created and a self-registered member can be approved. See P2.4 below and the
+new "Roles: Admin / Officer / Member" section.
 
-Evidence: `AccountController` puts `ClaimTypes.Role` into the auth cookie and the top bar
-displays it, but `Controllers/` has 0 matches for `[Authorize(Roles = ...)]` and 0 for
-`IsInRole`.
+**Follow-up done 2026-10-02 - the admin-only controls are now hidden, and Create is Admin-only.**
+The policy was extended (this is "option B"): `Create` (GET and POST) in `MemberController` and
+`ActivityController` now also carries `[Authorize(Roles = AppRoles.Admin)]`, so registering a
+member or adding an activity counts as administrative work. On the client side, every Admin-only
+control is wrapped in `@if (isAdmin)`, where `isAdmin = User.IsInRole(AppRoles.Admin)`: the
+`+ Add Member` / `+ Add Activity` buttons and the dashboard hero button, the Edit links, and the
+Activate / Deactivate (Cancel) forms in `Views/Member/*` and `Views/Activity/*`. An Officer sees a
+read-only note instead. `_Layout.cshtml` renders an extra "Administration" sidebar group and an
+Admin badge in the top bar only for Admins, so the navigation itself communicates the role split.
+
+Evidence (updated 2026-10-02): `Controllers/` has `[Authorize(Roles = AppRoles.Admin)]` on Create,
+Edit, Activate and Deactivate in both controllers, and `IsInRole` is used in the four list/details
+views and in `_Layout.cshtml`.
+
+Runtime verification (2026-10-02, spare port 5211): signed in as Admin - `>Edit<`, `>Deactivate<`,
+`+ Add Member`, `+ Add Activity` and the Admin badge are all present (`True`), and the Officer note
+is absent. Signed in as a throw-away Officer - none of those controls are rendered (all `False`),
+`>View<` is still present, and `GET /Member/Create`, `GET /Member/Edit/1` and
+`POST /Member/Deactivate/1` all land on `/Account/AccessDenied`. `Members.IsActive` for member 1
+stayed at 1, and the throw-away account was deleted afterwards.
 
 Impact: the system looks role-aware but is not. Any authenticated account can create, edit and
 deactivate every member and activity, and record attendance for anyone. There is also no screen
@@ -244,7 +264,14 @@ Re-verify: create a non-admin user, log in, attempt a Deactivate POST and confir
 
 Ordered by how much damage they do, not by file order.
 
-### P1.1 - Attendance quietly records every member as Present  [ ] open
+### P1.1 - Attendance quietly records every member as Present  [x] done (Phase 1)
+
+Done in Phase 1: `Views/Attendance/Record.cshtml` no longer defaults to
+"Present"; every radio group starts unmarked, a live counter shows how many
+members are unmarked, and "Mark all present" / "Mark all absent" buttons were
+added (decision D1). The POST writes a row only for a member that was marked.
+Verified at runtime: a fresh activity rendered 0 checked radios and
+"4 member(s) not yet marked"; after saving, all 4 came back pre-selected.
 
 Evidence: `Views/Attendance/Record.cshtml` resolves the status as
 `existing.ContainsKey(member.MemberID) ? existing[member.MemberID] : "Present"`, and the POST
@@ -261,7 +288,13 @@ marked"), and warn or block on save until every member is marked; or add "Mark a
 Re-verify: open Record for an activity with no saved attendance, confirm nothing is
 pre-selected, then confirm saving warns while members are unmarked.
 
-### P1.2 - Attendance status is unvalidated free text  [ ] open
+### P1.2 - Attendance status is unvalidated free text  [x] done (Phase 1)
+
+Done in Phase 1: new `Models/AttendanceStatus.cs` holds the only allowed values
+(`Present`, `Absent`) plus `IsValid()`. `AttendanceController.Record` (POST)
+drops anything that is not whitelisted, and only marks member ids that belong to
+a real, active member. Verified: posting `Hacked` for every member was rejected
+with an error and stored nothing.
 
 Evidence: `AttendanceController.Record` (POST) stores `entry.Value` exactly as posted; nothing
 checks it against "Present"/"Absent". `Attendance.Status` is `varchar(20)` with no check
@@ -275,14 +308,26 @@ Fix: whitelist the allowed values server-side, reject or skip anything else, val
 member id belongs to an active member, and share the allowed values through one constants class
 so the controller and the views cannot drift.
 
-### P1.3 - Attendance can be recorded for a cancelled activity  [ ] open
+### P1.3 - Attendance can be recorded for a cancelled activity  [x] done (Phase 1)
+
+Done in Phase 1: both `Record` (GET) and `Record` (POST) refuse an inactive
+activity, show a readable message and send the user to `Details` so the saved
+history stays visible. The Attendance `Index` shows a "Cancelled" badge and no
+Record button, and `Details` hides its Update button. Verified at runtime for
+GET and POST.
 
 Evidence: neither `Record` (GET) nor `Record` (POST) checks `activity.IsActive`.
 
 Fix: refuse to record when the activity is inactive (show a message) while keeping the saved
 history readable.
 
-### P1.4 - Duplicate-key inserts raise an unhandled 500  [ ] open
+### P1.4 - Duplicate-key inserts raise an unhandled 500  [x] done (Phase 1)
+
+Done in Phase 1: `SaveChangesAsync()` in `MemberController.Create`,
+`MemberController.Edit` and `AttendanceController.Record` is wrapped in a
+try/catch for `DbUpdateException` and turned into a field/message error. The
+friendly pre-checks stay. Verified: posting a duplicate Student ID returned the
+field error with HTTP 200, and a padded duplicate created no second row.
 
 Evidence: `MemberController.Create` and `ActivityController.Create` check for duplicates with a
 SELECT and then INSERT. The unique index is the real guard, so two overlapping submissions throw
@@ -294,7 +339,12 @@ Fix: keep the friendly pre-check, but also wrap `SaveChangesAsync()` in a try/ca
 Re-verify: submit the same StudentID from two tabs at once and confirm a field error instead of
 an error page.
 
-### P1.5 - Dead concurrency handling in Member Edit  [ ] open
+### P1.5 - Dead concurrency handling in Member Edit  [x] done (Phase 1)
+
+Done in Phase 1: the unreachable `DbUpdateConcurrencyException` block (and the
+now-unused `MemberExists` helper) were deleted instead of faked, because no
+model carries a concurrency token. The useful `DbUpdateException` guard replaces
+it (see P1.4).
 
 Evidence: `MemberController.Edit` catches `DbUpdateConcurrencyException`, but no model has a
 concurrency token (`[Timestamp]`/rowversion), so that catch block can never run.
@@ -302,7 +352,14 @@ concurrency token (`[Timestamp]`/rowversion), so that catch block can never run.
 Fix: either add a real concurrency token (needs a migration, see D4) or delete the block. Dead
 safety code is worse than none because it implies a guarantee that does not exist.
 
-### P1.6 - Inputs are never trimmed or format-checked  [ ] open
+### P1.6 - Inputs are never trimmed or format-checked  [x] done (Phase 1)
+
+Done in Phase 1: `MemberController.Create`/`Edit` and `ActivityController.Create`/
+`Edit` trim every text field and re-validate the cleaned values
+(`ModelState.Clear()` + `TryValidateModel`), so a stray space is accepted and
+normalised. `Member.StudentID` gained the same `^\d{4}-\d{5}$` format rule the
+registration form uses, which also rejects a padded lookalike outright. Verified:
+`  2024-53372  ` was trimmed to `2024-53372` and matched the stored row.
 
 Evidence: `StudentID`, `FullName`, `Course`, `YearLevel`, `ActivityTitle` and `Location` are
 saved exactly as typed; only the `MemberController.Index` search trims its input.
@@ -314,7 +371,12 @@ duplicates. Confirm with `SHOW VARIABLES LIKE 'collation_server'`.
 Fix: `Trim()` before validating and saving, and add light format validation to `StudentID`
 (for example `[RegularExpression(@"^\d{4}-\d{5}$")]`). Annotations do not change the schema.
 
-### P1.7 - Attendance POST runs one query per member (N+1)  [ ] open
+### P1.7 - Attendance POST runs one query per member (N+1)  [x] done (Phase 1)
+
+Done in Phase 1: `AttendanceController.Record` (POST) loads every existing row
+for the activity with one `ToDictionaryAsync`, loads the valid, active member ids
+with one query, then updates or adds from the dictionary. One read plus one
+write, not one read per member. Verified at runtime with a 4-member save.
 
 Evidence: the save loop calls `FirstOrDefaultAsync` inside `foreach (var entry in attendance)`.
 
@@ -322,7 +384,14 @@ Fix: load all existing rows for that activity in a single query into a
 `Dictionary<int, Attendance>`, then update or add from it. Attendance for 50 members should be
 one read plus one write, not 51 round trips.
 
-### P1.8 - Updating attendance destroys the original timestamp  [ ] open
+### P1.8 - Updating attendance destroys the original timestamp  [x] done (Phase 1)
+
+Done in Phase 1: `RecordedAt` is now written once and never overwritten.
+`Attendance.UpdatedAt` was added (decision D4 - migration
+`AddAttendanceUpdatedAt`) and is stamped only when a status actually changes.
+`Views/Attendance/Details.cshtml` shows both columns. Verified: after flipping
+every member's status, all `UpdatedAt` cells were populated while `RecordedAt`
+stayed listed.
 
 Evidence: `existing.RecordedAt = DateTime.Now;` overwrites the first recording time, and the
 `Attendances` table has no `UpdatedAt` column.
@@ -330,7 +399,20 @@ Evidence: `existing.RecordedAt = DateTime.Now;` overwrites the first recording t
 Fix: stop overwriting `RecordedAt` (keep the first record time), or add `UpdatedAt` through a
 migration (decision D4). Either way, the current behaviour permanently loses history.
 
-### P1.9 - Login is minimal and has no recovery path  [ ] open
+### P1.9 - Login is minimal and has no recovery path  [x] done (Phase 1)
+
+Done in Phase 1:
+
+- `SuccessRehashNeeded` was already handled and `Account/ChangePassword` already
+  exists (both landed with the 2026-10-02 user-management work).
+- `returnUrl` is passed to the login view, re-cleaned on POST
+  (`Url.IsLocalUrl`) and honoured after sign-in, so a user bounced off a page
+  lands back on it. An external `returnUrl` is discarded (no open redirect).
+- A cache-backed `Services/LoginAttemptTracker` locks a username + address pair
+  out for 5 minutes after 5 failures and is reset on success.
+
+Verified at runtime: `returnUrl=/Member/Index` ended on `/Member/Index`; an
+external URL fell back to `/`; the 6th wrong attempt was blocked.
 
 Evidence / gaps in `AccountController`:
 
@@ -344,7 +426,13 @@ Evidence / gaps in `AccountController`:
 Fix: handle `SuccessRehashNeeded`, pass and honour `returnUrl`, add a simple attempt limiter,
 and provide change-password plus minimal user management (shared with P0.6).
 
-### P1.10 - Query tightening  [ ] open
+### P1.10 - Query tightening  [x] done (Phase 1)
+
+Done in Phase 1: `HomeController.Index` was collapsed from six `COUNT` round
+trips to two grouped queries (total + active per table) plus the two history
+counts, all `AsNoTracking()`. `ActivityController.Index`, `Edit` (GET) and
+`Details` now use `AsNoTracking()`, and the Attendance reads already did. All
+pages still rendered (HTTP 200) at runtime.
 
 Evidence: `HomeController.Index` issues 6 separate `COUNT` queries for one screen;
 `ActivityController.Index` and most `Details`/`Edit` reads do not use `AsNoTracking()`.
@@ -352,7 +440,19 @@ Evidence: `HomeController.Index` issues 6 separate `COUNT` queries for one scree
 Fix: collapse the dashboard into one projection (or 2-3 grouped queries), and add
 `AsNoTracking()` to read-only queries.
 
-### P1.11 - Two sources of truth for membership status  [ ] open
+### P1.11 - Two sources of truth for membership status  [x] done (Phase 2)
+
+Done in Phase 2: decision **D2** settled the ownership. `Member.IsActive` stays
+authoritative and `Membership.Status` now exists in practice:
+
+- One `Membership` row per member (unique index on `Memberships.MemberID`, migration
+  `AddUniqueMembershipPerMember`).
+- A row is created automatically whenever a member is created (including
+  self-registration, which starts it at "Inactive").
+- `MembershipPolicy` mirrors the standing whenever `Member.IsActive` changes, so an inactive
+  member can never keep a non-inactive standing.
+- 3G lets an Admin set **Active** or **Suspended**; "Inactive" is system-managed.
+- `Participations` is now written by 3H, so the dashboard's participation counter moves.
 
 Evidence: `Member.IsActive` and `Membership.Status` both express "this person is a member", and
 nothing ever inserts a `Membership` row (there is no Membership controller or view).
@@ -384,13 +484,13 @@ run against production data.
 
 | Proposal # | Function | Status |
 |---|---|---|
-| 1 | Login / User Accounts | Partial - login works; no user CRUD, roles or password change |
-| 6 | Membership Management | Not started - model and table exist, no controller or views |
-| 7 | Participation Monitoring | Not started - model and table exist, no controller or views |
-| 8 | Reports | Not started - no per-activity summary, member summary or print view |
-| 9 | Search / Filtering | Partial - Members (ID/name) and Activities (title/date/status) only |
-| - | Member history (attendance + participation per member) | Not started - Member Details shows profile data only |
-| - | Navigation from a member to their records | Not started |
+| 1 | Login / User Accounts | Done (2026-10-02) - login, roles, user CRUD, self-service registration + approval, and change password |
+| 6 | Membership Management | Done (2026-10-03) - `MembershipController` + views; one row per member with standing Active/Suspended, mirrored to Inactive (decision D2) |
+| 7 | Participation Monitoring | Done (2026-10-03) - `ParticipationController` + views; upsert per the `(ActivityID, MemberID)` unique index |
+| 8 | Reports | Done (2026-10-03) - per-activity and per-member summaries with a print stylesheet |
+| 9 | Search / Filtering | Done (2026-10-03) - topbar search + `SearchController` across members and activities; every list keeps its own filters |
+| - | Member history (attendance + participation per member) | Done (2026-10-03) - Member Details shows the standing, counters and the 10 newest attendance/participation rows |
+| - | Navigation from a member to their records | Done (2026-10-03) - sidebar entries, dashboard cards and cross-links between Members, Membership, Attendance, Participation and Reports |
 
 Notes for whoever builds these:
 
@@ -410,23 +510,58 @@ Notes for whoever builds these:
 
 ## 5. P3 - consistency, polish and testing
 
-- [ ] `wwwroot/css/site.css` is dead code now: it is a comment stub, the layout links 11 real
+- [x] `wwwroot/css/site.css` is dead code now: it is a comment stub, the layout links 11 real
       stylesheets and no longer includes it - delete it or make it the single documented index.
-- [ ] `login.css` is linked by `_Layout.cshtml`, so it loads on every page - move it into the
-      Login page only.
-- [ ] Inline `style="..."` attributes remain in `Member/Create`, `Member/Details`,
+      **Done in Phase 3:** deleted (`git status` shows ` D wwwroot/css/site.css`). The layout links
+      the 11 real sheets - base, sidebar, navbar, components, forms, tables, dashboard, attendance,
+      participation, print, responsive - and every `href="/css/..."` in the rendered HTML was
+      checked against `wwwroot/css`: all OK, nothing missing.
+- [x] `login.css` is linked by `_Layout.cshtml`, so it loads on every page - move it into the
+      Login page only. **Done in Phase 3:** the layout link is gone, so it no longer loads on every
+      page. The file is linked only by the two standalone auth pages that actually use its
+      split-screen classes: `Views/Account/Login.cshtml` and `Views/Account/Register.cshtml` (both
+      render with `Layout = null`). Rendered check: the login page links it, the Portal does not.
+- [x] Inline `style="..."` attributes remain in `Member/Create`, `Member/Details`,
       `Activity/Create`, `Activity/Edit`, `Activity/Details`, `Attendance/Details` and
       `Attendance/Record` - replace them with classes.
-- [ ] `Views/Attendance/Record.cshtml` contains an inline `<script>` block while other pages use
+      **Done in Phase 3:** no view contains `style="`, `onsubmit=`, `onchange=` or `onclick=`.
+      Scanning the rendered Member, Member/Create, Login and Attendance/Record pages counts
+      `style="` = 0 and inline event handlers = 0. The two confirmations that used to be inline
+      are now `data-confirm` attributes handled by `site.js`.
+- [x] `Views/Attendance/Record.cshtml` contains an inline `<script>` block while other pages use
       `js/site.js` plus `@section Scripts` - move that behaviour into `site.js`.
-- [ ] No pagination on the Members, Activities or Attendance lists. Fine at demo scale, but it
+      **Done in Phase 3:** no view contains a `<script>` block without a `src=`. The record-sheet
+      behaviour (mark-all present/absent, live "not yet marked" counter, warn before saving) lives
+      in `wwwroot/js/site.js`; the rendered Attendance/Record page loads only `/js/site.js`.
+- [x] No pagination on the Members, Activities or Attendance lists. Fine at demo scale, but it
       should be documented as a known limit.
-- [ ] There is no test project of any kind. The highest-value first tests (xUnit) would cover:
+      **Done in Phase 3:** shared `Data/Paging.cs` (page size 20, clamped), `Models/Pagination.cs`
+      and `Views/Shared/_Pager.cshtml` page the Members, Activities, Attendance, Membership and
+      Participation lists, and the Prev/Next links carry the active search/status filters.
+      Verified at runtime with 25 members: page 1 = 20 rows, page 2 = 5 rows, `?page=999` clamps
+      to the last page instead of rendering empty, `?status=Active&page=2` = 4 rows with
+      `status=Active` preserved in the pager links, and a search with no hits renders no pager.
+- [x] There is no test project of any kind. The highest-value first tests (xUnit) would cover:
       duplicate StudentID, duplicate attendance, the attendance status whitelist, and the Index
       filters. These are exactly the areas where the P1 bugs live.
-- [ ] Accessibility: no skip link; inactive nav items emit `aria-current="false"` (better to omit
+      **Done in Phase 3:** `StudentOrganizationSystem.Tests/` (xUnit 2.9.2, .NET 8) holds 35 tests
+      covering exactly those areas plus the participation / membership / username unique indexes,
+      the attendance and membership status whitelists, `ParticipationTypes.Normalize`,
+      `MembershipPolicy` (Ensure / SyncStanding / idempotency), `LoginAttemptTracker`
+      (lockout / reset / casing), the report row math, `PagedResult` windows and clamping, and the
+      Members and Activities Index filters. The duplicate-key tests run against SQLite `:memory:`
+      so the unique indexes are really enforced (the EF in-memory provider would not catch them).
+      `dotnet test` -> **35 passed, 0 failed**.
+- [x] Accessibility: no skip link; inactive nav items emit `aria-current="false"` (better to omit
       the attribute); verify focus visibility on the sidebar links and the radio toggles.
-- [ ] `notes.txt` only contains a `cd` command and is tracked in git - harmless noise.
+      **Done in Phase 3:** the skip link is the first focusable element and targets
+      `<main id="main-content">`; `navAria()` returns `"page"` or `null`, so the rendered page
+      contains exactly one `aria-current="page"` and never a `false` (scanned: 0 occurrences of
+      `aria-current="false"`); `:focus-visible` rules cover links, buttons, inputs, selects,
+      textareas and `[tabindex]` globally plus `.btn` / `.icon-btn`; the pager nav carries
+      `aria-label="Pagination"` and `aria-current="page"` on the page number.
+- [x] `notes.txt` only contains a `cd` command and is tracked in git - harmless noise.
+      **Done in Phase 3:** deleted.
 
 ---
 
@@ -434,16 +569,25 @@ Notes for whoever builds these:
 
 Being honest about my own changes, not just the inherited code:
 
-- [ ] I added a CDN dependency (jsDelivr) for jQuery and jQuery Validation because `wwwroot/lib`
+- [x] I added a CDN dependency (jsDelivr) for jQuery and jQuery Validation because `wwwroot/lib`
       was missing. If the demo laptop has no internet, client-side validation silently stops
       working (server-side validation still runs). Vendoring the files into `wwwroot/lib` is the
-      safer long-term option.
-- [ ] I left `wwwroot/css/site.css` in the project even though nothing links it any more.
-- [ ] `_Layout.cshtml` links `login.css` on every page (see section 5).
-- [ ] The sidebar "Soon" items (Membership, Participation, Reports) are visible but inert. That
+      safer long-term option. **Fixed in Phase 3:** `wwwroot/lib` now holds jQuery 3.7.1,
+      jquery-validation 1.20.0 and jquery-validation-unobtrusive 4.0.0 locally;
+      `_ValidationScriptsPartial.cshtml` loads them from `~/lib`, and a scan of the rendered pages
+      finds 0 `cdn.jsdelivr` / `cdnjs` / `unpkg` references.
+- [x] I left `wwwroot/css/site.css` in the project even though nothing links it any more.
+      **Fixed in Phase 3:** the file was deleted (section 5).
+- [x] `_Layout.cshtml` links `login.css` on every page (see section 5).
+      **Fixed in Phase 3:** removed from the layout; only the standalone Login and Register pages
+      link it.
+- [x] The sidebar "Soon" items (Membership, Participation, Reports) are visible but inert. That
       communicates the roadmap honestly, but they must become real links as modules land, or they
-      become permanent decoration.
-- [ ] I emit `aria-current="false"` on inactive nav items instead of omitting the attribute.
+      become permanent decoration. **Fixed in Phase 2:** 3G/3H/3I landed, and the sidebar now links
+      `Membership/Index`, `Participation/Index` and `Reports/Index` for real.
+- [x] I emit `aria-current="false"` on inactive nav items instead of omitting the attribute.
+      **Fixed in Phase 3:** `navAria()` returns `"page"` or `null`, so inactive items omit the
+      attribute entirely (rendered scan: one `aria-current="page"`, zero `false`).
 - [ ] The login page's brand panel is decorative marketing copy. For a defense it would be better
       to show the organization/school identity and an adviser or contact line.
 - [ ] I did not stop the running application, so `bin/` still holds the previous build - that is
@@ -501,22 +645,66 @@ Acceptance: attendance can no longer be saved with implicit or invalid values; d
 produces a field error instead of a 500; the attendance POST is verified end to end (the one
 untested write path); all pages still render.
 
+Phase 1 executed and verified (2026-10-02): all ten items are done and each P1 entry above now
+carries a "Done in Phase 1" note. A throw-away run against the built app exercised every affected
+page and the attendance write path: every page returned 200, a fresh activity rendered no
+pre-selected status, an unknown status was rejected without being stored, the cancelled-activity
+guard refused both GET and POST, a padded duplicate Student ID produced a field error with no 500,
+and `returnUrl` plus the sign-in lockout behaved as designed. The one thing not reproducible in a
+sequential test is the `DbUpdateException` race itself - the pre-checks were verified, and the
+catch is the safety net. `progress.md` section 18 records the script and the 26/26 result; the test
+rows were deleted afterwards, so the database is back to its pre-run state.
+
 ### Phase 2 - finish the system
 
 1. 3G Membership Management (+ write `Membership` rows on registration) - after D2
 2. 3H Participation Monitoring (upsert per the unique index)
 3. 3I Reports (per-activity summary, per-member summary, print stylesheet)
-4. Users and roles (user CRUD, role assignment, change password) + enforced roles
+4. ~~Users and roles (user CRUD, role assignment, change password)~~ - **DONE 2026-10-02**
+   (`UserController` with create/edit/approve/reject/activate/deactivate/reset-password, plus
+   `Account/ChangePassword`). Roles were extended to Admin / Officer / Member, with a `Member`
+   portal and a `Users.MemberID` link (migration `AddUserMemberLink`).
 5. 3J unified search
 6. Member history on Member Details
 
 Acceptance: each new screen has search/filter, respects the unique indexes, follows the shared
 module pattern, and moves the dashboard counters.
 
+Phase 2 executed and verified (2026-10-03): 3G Membership, 3H Participation, 3I Reports, 3J
+unified search and the member-history view are all built. Decision **D2** was taken first, which
+is what unblocked 3G (and closed P1.11). A runtime pass over the built app drove every new page
+and the two new write paths (31/31 checks): a new member received an "Active" membership, an
+Admin set the standing to "Suspended", a crafted "Inactive" POST was refused, deactivating the
+member mirrored the standing to "Inactive" and reactivating returned it to "Active";
+participation was recorded (trimmed), updated, cleared by a blank box and rejected when too long;
+both reports rendered with their print header; search found the member in both modules; and
+Member Details showed the history. `progress.md` section 19 records the details, and the test
+rows were deleted afterwards.
+
 ### Phase 3 - polish and testing
 
 CSS cleanup (dead file, `login.css`, inline styles, inline script), pagination, an xUnit test
 project for the high-risk logic, an accessibility pass, and richer dev-only seed data.
+
+Acceptance: no dead or page-wide stylesheets, no inline styles/handlers/scripts in the views,
+every long list pages with its filters preserved, `dotnet test` is green from a standing start,
+the skip link and focus ring work, and a Development-only sample dataset makes an empty database
+demo-able while a Production database stays clean.
+
+Phase 3 executed and verified (2026-10-03): all eight items in section 5 are closed, each with its
+own "Done in Phase 3" evidence note, and the four resolvable self-critiques in section 6 are
+marked too. `site.css` and `notes.txt` are deleted, `login.css` is off the layout (Login/Register
+only), every view is free of `style="` / inline handlers / inline `<script>` blocks, jQuery is
+vendored in `wwwroot/lib`, and the five lists page through the shared `Data/Paging.cs` +
+`_Pager.cshtml` (20 per page, filters carried). The new `StudentOrganizationSystem.Tests` project
+runs **35 xUnit tests, all green**, including duplicate-key tests against a real SQLite in-memory
+database. `DbInitializer.SeedSampleDataAsync` was verified on a throw-away database: Development
++ empty -> 5 members, 3 activities, 8 attendance rows, 4 participation rows, 5 memberships and an
+`officer` / `officer123` account, a second start changed nothing (idempotent), and the same
+installer under `ASPNETCORE_ENVIRONMENT=Production` created only the admin - **0 sample rows**.
+The seeded and non-seeded databases were checked over HTTP (every page 200, officer sign-in works,
+wrong password rejected) and both temporary databases were dropped afterwards; the real
+`StudentOrganizationDB` still holds its pre-run rows. `progress.md` section 20 records the checks.
 
 ### Verification protocol to repeat after every phase
 
@@ -532,10 +720,10 @@ project for the high-risk logic, an accessibility pass, and richer dev-only seed
 
 | ID | Decision | Recommendation |
 |---|---|---|
-| D1 | Attendance: allow a "not recorded" state (tri-state), or force a choice with bulk "all present / all absent" buttons? | Tri-state plus bulk buttons: it keeps data honest and the form fast |
-| D2 | Membership status: `Member.IsActive` as the single source of truth (mirrored into `Membership.Status`), or two independent values? | Keep `Member.IsActive` authoritative; let `Membership.Status` express standing (Active / Inactive / Suspended) and never contradict `IsActive` |
+| D1 | Attendance: allow a "not recorded" state (tri-state), or force a choice with bulk "all present / all absent" buttons? | **Decided (Phase 1).** Tri-state plus bulk buttons: radios start unmarked, a live counter warns before saving, and "Mark all present / all absent" fill the sheet. A member with no saved status simply gets no row. |
+| D2 | Membership status: `Member.IsActive` as the single source of truth (mirrored into `Membership.Status`), or two independent values? | **Decided (Phase 2).** One `Membership` row per member (unique on `MembershipID` = per `MemberID`). `Member.IsActive` stays authoritative; `Membership.Status` is Active or Suspended and is mirrored to Inactive automatically, so the two can never contradict. "History" = the row's joined/updated dates plus the member's attendance and participation. |
 | D3 | Roles: is everyone effectively an Admin, or are Admin vs Officer enforced? | Enforce at least on destructive actions (Deactivate, status changes) - the role claim and the UI already exist |
-| D4 | `Attendance.RecordedAt` on update: accept the overwrite, or add an `UpdatedAt` column? | Add `UpdatedAt` (and optionally a real concurrency token) through a migration; document the schema change in progress.md, since the tables were declared final |
+| D4 | `Attendance.RecordedAt` on update: accept the overwrite, or add an `UpdatedAt` column? | **Decided (Phase 1).** Added `Attendance.UpdatedAt` through migration `AddAttendanceUpdatedAt`; `RecordedAt` is written once and never overwritten. No concurrency token was added (there is no rowversion requirement yet). |
 
 Decisions already taken:
 
@@ -545,7 +733,7 @@ Decisions already taken:
   attendance stay open to any signed-in user. Reversing this decision is a one-line change per
   action. The user/role screen that makes the policy usable stays in Phase 2 (item 4).
 
-D1, D2 and D4 are still open and still block the work listed next to them.
+All four decisions (D1-D4) are now taken; nothing blocks Phase 3.
 
 Unverified runtime behaviours worth checking first, because they change how much code must move:
 
@@ -582,6 +770,11 @@ Unverified runtime behaviours worth checking first, because they change how much
 |---|---|
 | 2026-09-27 | Initial audit (P0 x 6, P1 x 12, P2 gaps, P3 polish). `todo.md` corrected, `progress.md` section 15 added. |
 | 2026-09-27 | Phase 0 executed and verified at runtime: P0.1-P0.6 fixed (each has a "Done in Phase 0" note), D3 decided, the password was redacted from this file, tracked files went 166 -> 61. `progress.md` section 16 added; Phase 1 is next. |
+| 2026-10-02 | P0.6 follow-up: `Create` made Admin-only, and every Admin-only control hidden from Officers (plus an "Administration" nav group and an Admin badge for Admins). Verified at runtime as Admin and as a throw-away Officer. |
+| 2026-10-02 | Third role added: **Member**. Self-service registration + admin approval, a read-only Member portal, a Users & Roles admin screen, and `Account/ChangePassword`. New migration `AddUserMemberLink` (`Users.MemberID`, unique, Restrict). Management controllers restricted to Admin/Officer. Verified end-to-end at runtime. |
+| 2026-10-02 | **Phase 1 executed and verified** (26/26 runtime checks): P1.1-P1.10 closed. Tri-state attendance with bulk buttons and an `AttendanceStatus` whitelist, active-activity guard, `DbUpdateException` handling, dead concurrency block removed, trim + `StudentID` format validation, batched attendance write, `Attendance.UpdatedAt` via migration `AddAttendanceUpdatedAt`, `returnUrl` + sign-in lockout, tightened dashboard and `AsNoTracking()`. Decisions **D1** and **D4** taken (D2 still open). The two open runtime questions in section 0 are now answered. `progress.md` section 18 added. |
+| 2026-10-03 | **Phase 2 executed and verified** (31/31 runtime checks): 3G Membership Management (one row per member, standing Active/Suspended mirrored to Inactive), 3H Participation Monitoring (upsert per the unique index), 3I Reports (per-activity + per-member summaries and a print stylesheet), 3J unified search (topbar + results page) and member history on Member Details. Decision **D2** taken; P1.11 closed. New migration `AddUniqueMembershipPerMember`. `progress.md` section 19 added. |
+| 2026-10-03 | **Phase 3 executed and verified** (section 5 fully closed, 35/35 xUnit tests green): `site.css` and `notes.txt` deleted, `login.css` moved off the layout onto the Login/Register pages only, all inline styles/handlers/inline scripts removed from the views, jQuery vendored into `wwwroot/lib` (no CDN), pagination added to the five lists with filters preserved, skip link + `aria-current` + `:focus-visible` accessibility pass, a new `StudentOrganizationSystem.Tests` project (SQLite `:memory:` for the duplicate-key tests), and Development-only seed data (`SeedSampleDataAsync`: 5 members, 3 activities, attendance/participation rows, an `officer` account) verified idempotent on a throw-away database and verified **not** to run under Production. `progress.md` section 20 added. |
 
 
 
