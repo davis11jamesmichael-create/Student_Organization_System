@@ -170,6 +170,38 @@
 ---
 ---
 
+## `boltai.md` review — urgent security hardening (DONE - 2026-10-11)
+
+- [x] **C1 — no hardcoded admin password.** The first admin's password comes from
+      `Seed:AdminPassword` (config / env / user-secrets); when it is not set the seeder generates a
+      random 16-character password and `Program.cs` prints it **once** on first run. New
+      `User.MustChangePassword` (migration `AddUserSecurityFields`) is carried in the cookie, and a
+      `Program.cs` middleware (`Services/MustChangePasswordPolicy`) holds the account on
+      `Account/ChangePassword` until it is replaced. `officer123` remains a Development-only sample.
+- [x] **C2 — sessions rotate on role change / deactivation.** New `User.SecurityStamp` is minted
+      into the cookie (`AppClaims.SecurityStamp`); `Program.cs` adds `OnValidatePrincipal` that
+      re-checks stamp + role + `IsActive` through `Services/SecurityStampGuard` (cached ~1 min) and
+      rejects the cookie on any mismatch. The stamp is rotated in `UserController.Edit`,
+      `Deactivate`, `Activate`, `ResetPassword` and `AccountController.ChangePassword`;
+      `DbInitializer` backfills a stamp for existing rows.
+- [x] Build `0 warnings`; `dotnet test` **73/73 green**; migration `AddUserSecurityFields` applied.
+- [ ] C3–C10 (audit logging, role validation, `Edit` self-deactivation guard, super-admin tier,
+      dormant accounts, async / atomic-`Reject` / UTC clean-ups) — still to do (see
+      `planned_features.md`).
+
+## Part A — Profile / change-password UI tidy-up (DONE - 2026-10-11)
+
+- [x] **A1** sidebar "Change password" link removed from `_Layout.cshtml` (Logout stays)
+- [x] **A2** Profile page gained an **Account** card with a `Change password` button; the hint text
+      no longer says "go elsewhere"
+- [x] **A3** new `Views/Shared/_BackButton.cshtml` partial + `.btn-back` CSS + a `[data-back]`
+      handler in `site.js`; used on Profile and Change password (Back targets Profile)
+- [x] Verified: build `0 warnings`, `dotnet test` 73/73, and a runtime walk (sidebar has no
+      "Change password"; Profile 200 with Back + one change-password link; change-password page 200
+      with a Back link to `/Profile`)
+
+---
+
 ## Pre-Launch Checklist (do on leader's laptop)
 
 - [ ] Install .NET 8 SDK

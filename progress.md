@@ -1038,3 +1038,114 @@ then walk every module. Two openings noted earlier still stand: public registrat
 surface (`Registration:Enabled` switch + rate limiting), and pending registrations could get a
 "Pending" badge on the Members list.
 
+## 21. `boltai.md` review - urgent security hardening (2026-10-11)
+
+Source: `boltai.md` (an external security/account review), captured as Part C of
+`planned_features.md`. Its two "most urgent" findings are now fixed. C3-C10 remain.
+
+### 21.1 C1 - the seeded admin no longer has a published password
+
+- `Data/DbInitializer.cs` no longer contains `"admin123"`. `InitializeAsync` takes the password
+  from `Seed:AdminPassword` (config / env / user-secrets); when it is not set it generates a random
+  16-character password with `RandomNumberGenerator.GetString` and returns it once in a
+  `SeedOutcome`.
+- `Program.cs` prints that password **once** on first run (a bordered console block); it is never
+  written to a file or a log.
+- New `User.MustChangePassword` (migration `AddUserSecurityFields`) is set on the seeded admin and
+  carried in the cookie as `AppClaims.MustChangePassword`. `Services/MustChangePasswordPolicy`
+  (pure) lists the only paths that stay open; a `Program.cs` middleware (registered right after
+  `UseAuthentication`) redirects everything else to `Account/ChangePassword`. The form shows a red
+  banner while the flag is set, and `AccountController.ChangePassword` clears it.
+- The dev-only sample account `officer` / `officer123` is untouched (still gated by
+  `seedSampleData`, Development only).
+
+### 21.2 C2 - the auth cookie revalidates on every request
+
+- New `User.SecurityStamp` (same migration) is minted into the cookie as
+  `AppClaims.SecurityStamp` by `Services/UserClaims`.
+- `Program.cs` adds `CookieAuthenticationEvents.OnValidatePrincipal`: it re-reads the account
+  through `Services/SecurityStampGuard` (a ~1-minute `IMemoryCache` entry) and, on a stamp / role /
+  active mismatch, calls `RejectPrincipal()` + `SignOutAsync()`. A demoted or deactivated user is
+  signed out on their next click instead of keeping the old role for up to eight hours.
+- The stamp is rotated (and the cache evicted) in `UserController.Edit` (only when the role, the
+  active flag or the password actually changed), `Deactivate`, `Activate`, `ResetPassword` and
+  `AccountController.ChangePassword`. `DbInitializer.BackfillSecurityStampsAsync` gives a stamp to
+  any row that predates the column, so old accounts are not signed out permanently.
+
+### 21.3 Files added or changed
+
+| File | What changed |
+|---|---|
+| `Models/User.cs` | `SecurityStamp` (Required, 64) and `MustChangePassword` |
+| `Models/AppClaims.cs` | `SecurityStamp` and `MustChangePassword` claim names |
+| `Models/SecurityStamps.cs` (NEW) | `New()` -> a 32-char GUID stamp |
+| `Services/SecurityStampGuard.cs` (NEW) | `UserSnapshot`, the pure `IsCurrent` rule, the cached `GetCurrentAsync`, and `Evict`. (Named "Guard" - `Microsoft.AspNetCore.Identity.SecurityStampValidator` owns the obvious name.) |
+| `Services/MustChangePasswordPolicy.cs` (NEW) | the pure list of paths allowed during the forced change |
+| `Services/UserClaims.cs` | mints the stamp and (when set) the must-change flag |
+| `Data/DbInitializer.cs` | `SeedOutcome`, `EnsureFirstAdminAsync`, `GeneratePassword`, `BackfillSecurityStampsAsync`; the literal password is gone |
+| `Program.cs` | registers `SecurityStampGuard`; adds `OnValidatePrincipal`; passes `Seed:AdminPassword`; prints the one-time password; adds the must-change middleware |
+| `Controllers/UserController.cs` | `SecurityStampGuard` injected; `InvalidateSessions` on edit / deactivate / activate / reset |
+| `Controllers/AccountController.cs` | `SecurityStampGuard` injected; `ChangePassword` GET sets `ViewData["MustChange"]`, POST clears the flag, rotates the stamp and re-issues the cookie |
+| `Views/Account/ChangePassword.cshtml` | red "one-time password" banner when `ViewData["MustChange"]` is set |
+| `appsettings.json` | documented `Seed:AdminPassword` (empty by default) |
+| `Migrations/20261011022935_AddUserSecurityFields.*` (NEW) | adds both columns (defaults for existing rows) |
+| `StudentOrganizationSystem.Tests/SecurityHardeningTests.cs` (NEW) | 21 tests for C1 + C2 |
+
+### 21.4 How it was verified (2026-10-11, build + tests + migration)
+
+1. `dotnet build` -> succeeded, **0 warnings, 0 errors**.
+2. `dotnet ef migrations add AddUserSecurityFields` -> reviewed the generated `Up`
+   (`MustChangePassword tinyint(1) NOT NULL DEFAULT FALSE`, `SecurityStamp varchar(64) NOT NULL
+   DEFAULT ''`), then `dotnet ef database update` applied it to the local `StudentOrganizationDB`.
+3. `dotnet test StudentOrganizationSystem.Tests/StudentOrganizationSystem.Tests.csproj` ->
+   **Passed! Failed: 0, Passed: 73, Total: 73** (the previous 52 plus 21 new). The new tests cover:
+   the stamp rule (match / stale / missing / deactivated / changed role / exact role compare), the
+   cookie claims, `MustChangePasswordPolicy`, and `DbInitializer.EnsureFirstAdminAsync` (a generated
+   password is stored and `admin123` is not; a configured password is used and not echoed back; no
+   second admin is ever created).
+
+### 21.5 What is next
+
+`planned_features.md` step 2 onward: **Part A** (sidebar / Profile change-password tidy-up + a Back
+button), then **B1 Announcements**, **B2 Notifications**, **B3 Activity comments**, then **C3-C10**
+(audit logging, role validation, the `Edit` self-deactivation guard, super-admin tier, dormant
+accounts, and the async / atomic-`Reject` / UTC bug fixes).
+
+## 22. Part A - Profile / change-password UI tidy-up (2026-10-11)
+
+`planned_features.md` step 2 (A1-A3). Small, low-risk UI changes; the recommended A2 approach was
+taken (the standalone `Account/ChangePassword` page stays).
+
+### 22.1 What changed
+
+| File | What changed |
+|---|---|
+| `Views/Shared/_Layout.cshtml` | the `<a class="sidebar-signout" ... ChangePassword>` block was deleted from `.sidebar-footer` (A1); the Logout form stays |
+| `Views/Profile/Index.cshtml` | an **Account** `form-card` with a `Change password` primary button linking to `Account/ChangePassword` (A2); the picture hint no longer says "use … to change your password"; a `.page-back` row with the new Back partial (A3) |
+| `Views/Account/ChangePassword.cshtml` | a `.page-back` row with the Back partial; `ViewData["BackFallback"]` is set to the Profile page |
+| `Views/Shared/_BackButton.cshtml` (NEW) | `<a class="btn-back" data-back href="...">← Back</a>`; fallback = `ViewData["BackFallback"]`, else Home for staff / Portal for a Member |
+| `wwwroot/js/site.js` | a `[data-back]` handler that calls `history.back()` only when `document.referrer` is the same origin, otherwise follows the `href` (mirrors the `data-confirm` pattern; no inline JS) |
+| `wwwroot/css/components.css` | `.btn-back` and `.page-back` |
+
+### 22.2 A pitfall worth remembering
+
+The first version of the partial used `@model string?` and was called as `<partial name="_BackButton" />`.
+That 500'd: when a partial has no `model` attribute, ASP.NET Core passes the **parent** view's model,
+so the partial received the Profile page's `User` and the `string?` cast failed. The fix was to drop
+`@model` and read the fallback from `ViewData["BackFallback"]`, computing the role-aware default
+inside the partial.
+
+### 22.3 How it was verified (2026-10-11, build + tests + runtime)
+
+1. `dotnet build` -> succeeded, **0 warnings, 0 errors**.
+2. `dotnet test StudentOrganizationSystem.Tests/...` -> **Passed! Failed: 0, Passed: 73, Total: 73**
+   (views are not unit-tested, so the count is unchanged).
+3. Runtime walk on a throw-away database (`StudentOrganizationDB_C1C2Check`, dropped afterwards),
+   app on `http://127.0.0.1:5220`; sign-in with the first-run one-time password, then:
+   - `/Member/Index` before the change -> bounced to `/Account/ChangePassword` with the red banner;
+   - after the change -> `/Member/Index` = 200;
+   - `/Profile` = 200, contains a Back button (`data-back`) and exactly **one**
+     `href="/Account/ChangePassword"` link;
+   - the sidebar footer contains **no** "Change password" text but keeps "Logout";
+   - `/Account/ChangePassword` = 200 with a Back link whose `href` is `/Profile`.
+

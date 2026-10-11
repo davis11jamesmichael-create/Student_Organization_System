@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using StudentOrganizationSystem.Models;
@@ -6,10 +7,20 @@ namespace StudentOrganizationSystem.Data
 {
     public static class DbInitializer
     {
-        public static async Task InitializeAsync(
+        /// <summary>
+        /// What one run of the seeding did. <see cref="GeneratedPassword"/> is set
+        /// only when a brand-new administrator was created without a configured
+        /// password, so Program.cs can print it exactly once (C1).
+        /// </summary>
+        public sealed record SeedOutcome(
+            string? AdminUsername,
+            string? GeneratedPassword);
+
+        public static async Task<SeedOutcome> InitializeAsync(
             ApplicationDbContext context,
             IPasswordHasher<User> passwordHasher,
-            bool seedSampleData = false)
+            bool seedSampleData = false,
+            string? adminPassword = null)
         {
             // Make sure the database is available
             await context.Database.MigrateAsync();
@@ -17,7 +28,7 @@ namespace StudentOrganizationSystem.Data
             // The Roles table holds the role names used by
             // [Authorize(Roles = AppRoles.Admin)] in the controllers
             // (AUDIT.md P0.6, decision D3).
-            var adminRole = await EnsureRoleAsync(
+            await EnsureRoleAsync(
                 context,
                 AppRoles.Admin);
 
@@ -31,47 +42,106 @@ namespace StudentOrganizationSystem.Data
                 context,
                 AppRoles.Member);
 
-            // Stop if an admin account already exists
+            var outcome = await EnsureFirstAdminAsync(
+                context,
+                passwordHasher,
+                adminPassword);
+
+            // C2: rows created before the SecurityStamp column existed carry an
+            // empty stamp, which would read as "stale" and sign them out for good.
+            await BackfillSecurityStampsAsync(context);
+
+            // Development-only sample data (AUDIT.md P1.12). Guarded inside, so
+            // calling it when the admin already exists is harmless.
+            if (seedSampleData)
+            {
+                await SeedSampleDataAsync(context, passwordHasher);
+            }
+
+            return outcome;
+        }
+
+        /// <summary>
+        /// Creates the first administrator when there is none. C1: the password is
+        /// never a literal in this file - it comes from the <c>Seed:AdminPassword</c>
+        /// setting, or, when that is not configured, a random one is generated and
+        /// handed back so the caller can print it once. Either way the account must
+        /// replace it at the first sign-in.
+        /// </summary>
+        public static async Task<SeedOutcome> EnsureFirstAdminAsync(
+            ApplicationDbContext context,
+            IPasswordHasher<User> passwordHasher,
+            string? configuredPassword = null)
+        {
+            var adminRole = await EnsureRoleAsync(context, AppRoles.Admin);
+
             var adminExists = await context.Users
                 .AnyAsync(u => u.RoleID == adminRole.RoleID);
 
             if (adminExists)
             {
-                // The first admin is already there; only the dev sample data might
-                // still be missing (it is skipped entirely on a real database).
-                if (seedSampleData)
-                {
-                    await SeedSampleDataAsync(context, passwordHasher);
-                }
-
-                return;
+                return new SeedOutcome(null, null);
             }
 
-            // Create the first administrator
+            var generated = string.IsNullOrWhiteSpace(configuredPassword);
+            var password = generated
+                ? GeneratePassword()
+                : configuredPassword!;
+
             var admin = new User
             {
                 Username = "admin",
                 RoleID = adminRole.RoleID,
                 IsActive = true,
+                MustChangePassword = true,
                 CreatedAt = DateTime.Now
             };
 
-            // Hash the password before storing it
-            admin.PasswordHash =
-                passwordHasher.HashPassword(
-                    admin,
-                    "admin123"
-                );
+            // The plain password is hashed here and never stored.
+            admin.PasswordHash = passwordHasher.HashPassword(admin, password);
 
             context.Users.Add(admin);
             await context.SaveChangesAsync();
 
-            // Development-only sample data (AUDIT.md P1.12).
-            if (seedSampleData)
-            {
-                await SeedSampleDataAsync(context, passwordHasher);
-            }
+            return new SeedOutcome(
+                admin.Username,
+                generated ? password : null);
         }
+
+        /// <summary>
+        /// Gives every account without a stamp a fresh one. Idempotent, so after the
+        /// first run it simply does nothing.
+        /// </summary>
+        private static async Task BackfillSecurityStampsAsync(
+            ApplicationDbContext context)
+        {
+            var stampless = await context.Users
+                .Where(u => string.IsNullOrEmpty(u.SecurityStamp))
+                .ToListAsync();
+
+            if (stampless.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var user in stampless)
+            {
+                user.SecurityStamp = SecurityStamps.New();
+            }
+
+            await context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// 16 characters from an unambiguous alphabet: readable from a console,
+        /// long enough to resist guessing, and always past the 6-character minimum
+        /// the password forms enforce.
+        /// </summary>
+        private const string PasswordAlphabet =
+            "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+
+        private static string GeneratePassword() =>
+            RandomNumberGenerator.GetString(PasswordAlphabet, 16);
 
         /// <summary>
         /// Fills an EMPTY database with a small, realistic demo set so the modules
@@ -179,7 +249,80 @@ namespace StudentOrganizationSystem.Data
                 context.Users.Add(officer);
             }
 
+            // Sample announcements.
+            context.Announcements.AddRange(
+                new Announcement
+                {
+                    Title = "Welcome to the New Semester!",
+                    Body = "We are excited to kick off the new semester. Please check the Activities page for upcoming events and make sure your membership details are up to date.",
+                    Audience = AnnouncementAudience.All,
+                    IsPinned = true,
+                    IsActive = true,
+                    CreatedAt = DateTime.Now.AddDays(-10)
+                },
+                new Announcement
+                {
+                    Title = "Outreach Program Volunteers Needed",
+                    Body = "We are looking for volunteers for the upcoming Outreach Program. Please sign up at the secretariat office before the deadline.",
+                    Audience = AnnouncementAudience.Members,
+                    IsPinned = false,
+                    IsActive = true,
+                    CreatedAt = DateTime.Now.AddDays(-5)
+                },
+                new Announcement
+                {
+                    Title = "Officer Meeting — This Friday",
+                    Body = "All officers are required to attend the meeting this Friday at 3:00 PM in Room 201. Attendance is mandatory.",
+                    Audience = AnnouncementAudience.Staff,
+                    IsPinned = false,
+                    IsActive = true,
+                    CreatedAt = DateTime.Now.AddDays(-2)
+                }
+            );
+
             await context.SaveChangesAsync();
+
+            // B3: sample comments on the first two activities.
+            var adminUser = await context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Username == "admin");
+
+            var officerUser = await context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Username == "officer");
+
+            if (adminUser != null && activities.Count >= 2)
+            {
+                context.ActivityComments.AddRange(
+                    new ActivityComment
+                    {
+                        ActivityID = activities[0].ActivityID,
+                        UserID = adminUser.UserID,
+                        Body = "Great turnout for the General Assembly! Thanks to everyone who attended.",
+                        CreatedAt = activities[0].ActivityDate.AddHours(13)
+                    },
+                    new ActivityComment
+                    {
+                        ActivityID = activities[1].ActivityID,
+                        UserID = adminUser.UserID,
+                        Body = "Reminder: please bring your laptops for the Coding Bootcamp.",
+                        CreatedAt = activities[1].ActivityDate.AddDays(-1)
+                    }
+                );
+
+                if (officerUser != null)
+                {
+                    context.ActivityComments.Add(new ActivityComment
+                    {
+                        ActivityID = activities[0].ActivityID,
+                        UserID = officerUser.UserID,
+                        Body = "Slides from the assembly have been uploaded to the shared drive.",
+                        CreatedAt = activities[0].ActivityDate.AddHours(15)
+                    });
+                }
+
+                await context.SaveChangesAsync();
+            }
         }
 
         /// <summary>

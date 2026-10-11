@@ -20,5 +20,19 @@ namespace StudentOrganizationSystem.Models
         /// picture without a database round trip on every page.
         /// </summary>
         public const string AvatarPath = "AvatarPath";
+
+        /// <summary>
+        /// The user's <c>SecurityStamp</c> at sign-in time. C2: Program.cs compares
+        /// it with the stored value on every request, so a role change or a
+        /// deactivation rejects the cookie instead of honoring it for eight hours.
+        /// </summary>
+        public const string SecurityStamp = "SecurityStamp";
+
+        /// <summary>
+        /// Present (with the value "true") only while the account must still
+        /// replace the password it was given. C1: a first-run administrator can
+        /// then reach nothing but the change-password form.
+        /// </summary>
+        public const string MustChangePassword = "MustChangePassword";
     }
 }

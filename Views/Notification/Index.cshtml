@@ -1,0 +1,103 @@
+@model IEnumerable<StudentOrganizationSystem.Models.Notification>
+
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="page-container">
+
+    <div class="page-header">
+        <div class="page-header-text">
+            <h1>Notifications</h1>
+            <p>@ViewBag.UnreadCount unread</p>
+        </div>
+        @if (Model.Any(n => !n.IsRead))
+        {
+            <form asp-action="MarkAllRead" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-light">Mark all as read</button>
+            </form>
+        }
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <div class="table-card">
+        <div class="table-card-header">
+            <h2>All Notifications</h2>
+            <span class="record-count">@Model.Count() notification(s)</span>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="empty-state">
+                <p>You have no notifications yet.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Title</th>
+                            <th>Message</th>
+                            <th>Received</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var n in Model)
+                        {
+                            <tr class="@(!n.IsRead ? "row-unread" : "")">
+                                <td>
+                                    <span class="badge @(n.Category == NotificationCategory.Announcement ? "badge-active" : n.Category == NotificationCategory.Activity ? "badge-upcoming" : n.Category == NotificationCategory.Account ? "badge-admin" : "badge-inactive")">
+                                        @n.Category
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(n.Link))
+                                    {
+                                        <a href="@n.Link">@n.Title</a>
+                                    }
+                                    else
+                                    {
+                                        @n.Title
+                                    }
+                                </td>
+                                <td>@n.Message</td>
+                                <td>@n.CreatedAt.ToString("MMM dd, yyyy h:mm tt")</td>
+                                <td>
+                                    @if (n.IsRead)
+                                    {
+                                        <span class="badge badge-inactive">Read</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-active">Unread</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!n.IsRead)
+                                    {
+                                        <form asp-action="MarkRead" asp-route-id="@n.NotificationID" method="post" style="display:inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-light">Mark read</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @await Html.PartialAsync("_Pager", ViewBag.Pager as StudentOrganizationSystem.Models.PagerViewModel)
+        }
+    </div>
+
+</div>

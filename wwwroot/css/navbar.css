@@ -115,3 +115,47 @@ a.topbar-user:hover {
     border-color: var(--danger);
     color: var(--danger-dark);
 }
+
+/* ── Notification bell ── */
+
+.topbar-bell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--gray-200);
+    background: var(--white);
+    font-size: 16px;
+    text-decoration: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.topbar-bell:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.bell-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--danger, #e53e3e);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+    pointer-events: none;
+}
+
+/* Unread row highlight in the notifications table */
+.row-unread {
+    background: var(--primary-light, #ebf4ff);
+}

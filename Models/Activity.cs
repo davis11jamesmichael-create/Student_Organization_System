@@ -60,6 +60,9 @@ namespace StudentOrganizationSystem.Models
         public ICollection<Participation> Participations { get; set; }
             = new List<Participation>();
 
+        public ICollection<ActivityComment> Comments { get; set; }
+            = new List<ActivityComment>();
+
         /// <summary>
         /// The schedule must make sense: an activity cannot end before it starts.
         /// Running through <see cref="IValidatableObject"/> means the controllers'

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using StudentOrganizationSystem.Data;
 using StudentOrganizationSystem.Models;
+using StudentOrganizationSystem.Services;
 
 namespace StudentOrganizationSystem.Controllers
 {
@@ -17,13 +18,16 @@ namespace StudentOrganizationSystem.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IPasswordHasher<User> _passwordHasher;
+        private readonly SecurityStampGuard _stampValidator;
 
         public UserController(
             ApplicationDbContext context,
-            IPasswordHasher<User> passwordHasher)
+            IPasswordHasher<User> passwordHasher,
+            SecurityStampGuard stampValidator)
         {
             _context = context;
             _passwordHasher = passwordHasher;
+            _stampValidator = stampValidator;
         }
 
         // GET: /User
@@ -201,6 +205,12 @@ namespace StudentOrganizationSystem.Controllers
                 return View(model);
             }
 
+            // C2: what the account could do before the change, so its sign-in cookie is
+            // only thrown away when it really must be.
+            var sessionAffected = user.RoleID != model.RoleID
+                || user.IsActive != model.IsActive
+                || !string.IsNullOrWhiteSpace(model.Password);
+
             user.Username = model.Username;
             user.RoleID = model.RoleID;
             user.MemberID = model.MemberID;
@@ -213,6 +223,10 @@ namespace StudentOrganizationSystem.Controllers
                     user,
                     model.Password);
             }
+
+            // C2: a new role, a deactivation or a new password ends every session
+            // the account already had; renaming it alone does not.
+            InvalidateSessions(user, sessionAffected);
 
             try
             {
@@ -363,6 +377,10 @@ namespace StudentOrganizationSystem.Controllers
 
             user.IsActive = false;
 
+            // C2: the deactivated account loses its session at once instead of
+            // keeping it until the cookie expires.
+            InvalidateSessions(user, true);
+
             await _context.SaveChangesAsync();
 
             TempData["Success"] =
@@ -385,6 +403,10 @@ namespace StudentOrganizationSystem.Controllers
             }
 
             user.IsActive = true;
+
+            // C2: the account starts again with a fresh stamp, so no cookie minted
+            // before the deactivation can come back to life.
+            InvalidateSessions(user, true);
 
             await _context.SaveChangesAsync();
 
@@ -421,6 +443,9 @@ namespace StudentOrganizationSystem.Controllers
             user.PasswordHash = _passwordHasher.HashPassword(
                 user,
                 newPassword);
+
+            // C2: an administrative reset ends whatever session the account had.
+            InvalidateSessions(user, true);
 
             await _context.SaveChangesAsync();
 
@@ -550,6 +575,23 @@ namespace StudentOrganizationSystem.Controllers
                 .FirstOrDefaultAsync(r => r.RoleName == roleName);
 
             return role?.RoleID ?? 0;
+        }
+
+        /// <summary>
+        /// C2: ends every sign-in cookie an account already holds by giving it a
+        /// new security stamp, and drops the cached copy so the very next request
+        /// already sees it. <paramref name="changed"/> is false for an edit that
+        /// leaves the account's powers and password alone (a rename).
+        /// </summary>
+        private void InvalidateSessions(User user, bool changed)
+        {
+            if (!changed)
+            {
+                return;
+            }
+
+            user.SecurityStamp = SecurityStamps.New();
+            _stampValidator.Evict(user.UserID);
         }
 
         private int GetCurrentUserId()

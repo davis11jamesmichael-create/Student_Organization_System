@@ -47,6 +47,16 @@ namespace StudentOrganizationSystem.Controllers
                 .AsNoTracking()
                 .CountAsync(p => p.MemberID == member.MemberID);
 
+            ViewBag.LatestAnnouncements = await _context.Announcements
+                .AsNoTracking()
+                .Where(a => a.IsActive &&
+                    (a.Audience == AnnouncementAudience.All ||
+                     a.Audience == AnnouncementAudience.Members))
+                .OrderByDescending(a => a.IsPinned)
+                .ThenByDescending(a => a.CreatedAt)
+                .Take(3)
+                .ToListAsync();
+
             return View(member);
         }
 
@@ -78,6 +88,62 @@ namespace StudentOrganizationSystem.Controllers
             ViewBag.Member = member;
 
             return View(MemberRecords.Combine(attendances, participations));
+        }
+
+        // GET: /Portal/Activities/5
+        // B3: Member-side entry point for the discussion thread on one activity.
+        // The activity id comes from the URL, but is validated against the member's
+        // own attendance/participation records so a member cannot browse arbitrary
+        // activities by editing the address.
+        public async Task<IActionResult> Activities(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var member = await GetCurrentMemberAsync();
+            if (member == null) return View("NotLinked");
+
+            // Scope: the member must have an attendance or participation record for
+            // this activity, OR the activity is upcoming (so they can discuss it
+            // before it happens).
+            var hasRecord = await _context.Attendances
+                .AsNoTracking()
+                .AnyAsync(a => a.ActivityID == id && a.MemberID == member.MemberID);
+
+            if (!hasRecord)
+            {
+                hasRecord = await _context.Participations
+                    .AsNoTracking()
+                    .AnyAsync(p => p.ActivityID == id && p.MemberID == member.MemberID);
+            }
+
+            if (!hasRecord)
+            {
+                // Allow upcoming active activities even without a record yet.
+                hasRecord = await _context.Activities
+                    .AsNoTracking()
+                    .AnyAsync(a => a.ActivityID == id && a.IsActive &&
+                                   a.ActivityDate >= DateTime.Today);
+            }
+
+            if (!hasRecord) return Forbid();
+
+            var activity = await _context.Activities
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.ActivityID == id && a.IsActive);
+
+            if (activity == null) return NotFound();
+
+            var comments = await _context.ActivityComments
+                .AsNoTracking()
+                .Include(c => c.User)
+                .Where(c => c.ActivityID == id && c.IsActive)
+                .OrderBy(c => c.CreatedAt)
+                .ToListAsync();
+
+            ViewBag.Comments = comments;
+            ViewBag.CommentActivityId = activity.ActivityID;
+
+            return View(activity);
         }
 
         /// <summary>

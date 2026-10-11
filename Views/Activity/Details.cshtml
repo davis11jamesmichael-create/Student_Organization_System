@@ -87,3 +87,10 @@
     </div>
 
 </div>
+
+@{
+    var comments = ViewBag.Comments as List<StudentOrganizationSystem.Models.ActivityComment>
+                   ?? new List<StudentOrganizationSystem.Models.ActivityComment>();
+    ViewBag.CommentActivityId = Model.ActivityID;
+}
+@await Html.PartialAsync("_CommentList", comments)

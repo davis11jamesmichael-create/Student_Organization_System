@@ -65,6 +65,16 @@ namespace StudentOrganizationSystem.Controllers
                     .CountAsync()
             };
 
+            ViewBag.LatestAnnouncements = await _context.Announcements
+                .AsNoTracking()
+                .Where(a => a.IsActive &&
+                    (a.Audience == AnnouncementAudience.All ||
+                     a.Audience == AnnouncementAudience.Staff))
+                .OrderByDescending(a => a.IsPinned)
+                .ThenByDescending(a => a.CreatedAt)
+                .Take(3)
+                .ToListAsync();
+
             return View(dashboard);
         }
 

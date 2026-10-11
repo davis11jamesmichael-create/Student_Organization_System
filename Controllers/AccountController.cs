@@ -16,15 +16,18 @@ namespace StudentOrganizationSystem.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly LoginAttemptTracker _attemptTracker;
+        private readonly SecurityStampGuard _stampValidator;
 
         public AccountController(
             ApplicationDbContext context,
             IPasswordHasher<User> passwordHasher,
-            LoginAttemptTracker attemptTracker)
+            LoginAttemptTracker attemptTracker,
+            SecurityStampGuard stampValidator)
         {
             _context = context;
             _passwordHasher = passwordHasher;
             _attemptTracker = attemptTracker;
+            _stampValidator = stampValidator;
         }
 
         // GET: /Account/Login
@@ -307,8 +310,18 @@ namespace StudentOrganizationSystem.Controllers
         // GET: /Account/ChangePassword
         [HttpGet]
         [Authorize]
-        public IActionResult ChangePassword()
+        public async Task<IActionResult> ChangePassword()
         {
+            // C1: a first-run administrator is redirected here by Program.cs, so
+            // the page explains why everything else is closed for now.
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (int.TryParse(userId, out var id))
+            {
+                ViewData["MustChange"] = await _context.Users
+                    .AnyAsync(u => u.UserID == id && u.MustChangePassword);
+            }
+
             return View(new ChangePasswordViewModel());
         }
 
@@ -332,7 +345,11 @@ namespace StudentOrganizationSystem.Controllers
                 return RedirectToAction(nameof(Login));
             }
 
-            var user = await _context.Users.FindAsync(id);
+            // The role is loaded because the fresh sign-in cookie is rebuilt from
+            // this row at the end (C2).
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.UserID == id);
 
             if (user == null)
             {
@@ -358,7 +375,27 @@ namespace StudentOrganizationSystem.Controllers
                 user,
                 model.NewPassword);
 
+            // C1: the password the seeder handed out has now been replaced, so the
+            // "change it before anything else" redirect stops.
+            user.MustChangePassword = false;
+
+            // C2: a new password ends every session that used the old one - this
+            // browser included. The fresh cookie handed back below keeps this user
+            // signed in; any other device is signed out on its next request.
+            user.SecurityStamp = SecurityStamps.New();
+            _stampValidator.Evict(user.UserID);
+
             await _context.SaveChangesAsync();
+
+            // Re-issue the cookie so the "must change password" claim and any
+            // changed role take effect immediately, without a second sign-in.
+            var current = await HttpContext.AuthenticateAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                UserClaims.Build(user),
+                current.Properties ?? new AuthenticationProperties());
 
             TempData["Success"] =
                 "Your password has been changed.";

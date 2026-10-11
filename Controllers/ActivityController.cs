@@ -232,6 +232,17 @@ namespace StudentOrganizationSystem.Controllers
                 return NotFound();
             }
 
+            // B3: load active comments oldest-first for the discussion thread.
+            var comments = await _context.ActivityComments
+                .AsNoTracking()
+                .Include(c => c.User)
+                .Where(c => c.ActivityID == id && c.IsActive)
+                .OrderBy(c => c.CreatedAt)
+                .ToListAsync();
+
+            ViewBag.Comments = comments;
+            ViewBag.CommentActivityId = activity.ActivityID;
+
             return View(activity);
         }
 

@@ -1,0 +1,51 @@
+@model StudentOrganizationSystem.Models.Activity
+
+@{
+    ViewData["Title"] = "Activity Discussion";
+    var status = ActivityStatus.For(Model);
+    var schedule = Model.StartTime.ToString("hh\\:mm") + " – " + Model.EndTime.ToString("hh\\:mm");
+    var comments = ViewBag.Comments as List<StudentOrganizationSystem.Models.ActivityComment>
+                   ?? new List<StudentOrganizationSystem.Models.ActivityComment>();
+    ViewBag.CommentActivityId = Model.ActivityID;
+}
+
+<div class="form-container">
+
+    <div class="page-header form-head">
+        <div class="page-header-text">
+            <h1>@Model.ActivityTitle</h1>
+            <p>@Model.ActivityDate.ToString("MMMM dd, yyyy") &middot; @schedule &middot; @Model.Location</p>
+        </div>
+        <a asp-action="History" class="btn btn-light">← My History</a>
+    </div>
+
+    <div class="details-card">
+
+        <div class="details-row">
+            <span class="details-label">Status</span>
+            <span class="details-value">
+                <span class="badge @ActivityStatus.BadgeClass(status)">@status</span>
+            </span>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.FacultyInCharge))
+        {
+            <div class="details-row">
+                <span class="details-label">Faculty / Instructor</span>
+                <span class="details-value">@Model.FacultyInCharge</span>
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <div class="details-row">
+                <span class="details-label">Description</span>
+                <span class="details-value">@Model.Description</span>
+            </div>
+        }
+
+    </div>
+
+</div>
+
+@await Html.PartialAsync("_CommentList", comments)

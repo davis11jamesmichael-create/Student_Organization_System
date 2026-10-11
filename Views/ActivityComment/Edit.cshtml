@@ -1,0 +1,47 @@
+@model StudentOrganizationSystem.Models.ActivityComment
+
+@{
+    ViewData["Title"] = "Edit Comment";
+}
+
+<div class="form-container">
+
+    <div class="page-header form-head">
+        <div class="page-header-text">
+            <h1>Edit Comment</h1>
+            <p>@Model.Activity?.ActivityTitle</p>
+        </div>
+    </div>
+
+    <div class="form-card">
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="CommentID" />
+
+            <div class="form-group">
+                <label asp-for="Body" class="form-label">Comment</label>
+                <textarea asp-for="Body" class="form-control" rows="4" maxlength="1000"></textarea>
+                <span asp-validation-for="Body" class="field-error"></span>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save</button>
+                @if (User.IsInRole(AppRoles.Member))
+                {
+                    <a asp-controller="Portal" asp-action="Activities"
+                       asp-route-id="@Model.ActivityID" class="btn btn-light">Cancel</a>
+                }
+                else
+                {
+                    <a asp-controller="Activity" asp-action="Details"
+                       asp-route-id="@Model.ActivityID" class="btn btn-light">Cancel</a>
+                }
+            </div>
+        </form>
+    </div>
+
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

@@ -430,6 +430,39 @@
     border-color: transparent;
 }
 
+/* ── Back button (Views/Shared/_BackButton.cshtml) ── */
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-600);
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    text-decoration: none;
+    line-height: 1;
+    transition: all var(--transition);
+}
+
+.btn-back:hover {
+    color: var(--primary-dark);
+    border-color: var(--primary);
+}
+
+.btn-back:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* A row that holds a single Back button, with breathing room below it. */
+.page-back {
+    margin-bottom: 16px;
+}
+
 /* ── Error / status page (Views/Home/Error.cshtml) ── */
 
 .error-page {

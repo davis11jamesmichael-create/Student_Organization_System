@@ -1,0 +1,78 @@
+@model StudentOrganizationSystem.Models.Announcement
+
+@{
+    ViewData["Title"] = "Announcement";
+    var isStaff = (bool)(ViewBag.IsStaff ?? false);
+}
+
+<div class="form-container">
+
+    <div class="page-header form-head">
+        <div class="page-header-text">
+            <h1>
+                @if (Model.IsPinned)
+                {
+                    <span aria-label="Pinned">📌 </span>
+                }
+                @Model.Title
+            </h1>
+            <p>
+                Posted @Model.CreatedAt.ToString("MMMM dd, yyyy")
+                @if (Model.CreatedByUser != null)
+                {
+                    <span>by @Model.CreatedByUser.Username</span>
+                }
+            </p>
+        </div>
+        <a asp-action="Index" class="btn btn-light">← Back</a>
+    </div>
+
+    <div class="details-card">
+
+        @if (isStaff)
+        {
+            <div class="details-row">
+                <span class="details-label">Audience</span>
+                <span class="details-value">
+                    <span class="badge @(Model.Audience == AnnouncementAudience.All ? "badge-active" : Model.Audience == AnnouncementAudience.Members ? "badge-member" : "badge-admin")">
+                        @Model.Audience
+                    </span>
+                </span>
+            </div>
+        }
+
+        <div class="details-row">
+            <span class="details-label">Pinned</span>
+            <span class="details-value">@(Model.IsPinned ? "Yes" : "No")</span>
+        </div>
+
+        @if (Model.UpdatedAt.HasValue)
+        {
+            <div class="details-row">
+                <span class="details-label">Last Updated</span>
+                <span class="details-value">@Model.UpdatedAt.Value.ToString("MMMM dd, yyyy hh:mm tt")</span>
+            </div>
+        }
+
+        <div class="details-row" style="display:block; padding: 1rem 0;">
+            <span class="details-label">Message</span>
+            <div style="margin-top: 0.5rem; white-space: pre-wrap;">@Model.Body</div>
+        </div>
+
+        @if (isStaff)
+        {
+            <div class="details-actions">
+                <a asp-action="Edit" asp-route-id="@Model.AnnouncementID" class="btn btn-primary">Edit</a>
+                <a asp-action="Index" class="btn btn-light">Back to Announcements</a>
+            </div>
+        }
+        else
+        {
+            <div class="details-actions">
+                <a asp-action="Index" class="btn btn-light">Back to Announcements</a>
+            </div>
+        }
+
+    </div>
+
+</div>

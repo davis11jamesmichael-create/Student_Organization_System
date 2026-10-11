@@ -25,6 +25,14 @@ namespace StudentOrganizationSystem.Data
 
         public DbSet<Participation> Participations { get; set; }
 
+        public DbSet<Announcement> Announcements { get; set; }
+
+        public DbSet<Notification> Notifications { get; set; }
+
+        public DbSet<ActivityComment> ActivityComments { get; set; }
+
+        public DbSet<AuditLog> AuditLogs { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -114,6 +122,41 @@ namespace StudentOrganizationSystem.Data
                 .HasOne(p => p.Member)
                 .WithMany(m => m.Participations)
                 .HasForeignKey(p => p.MemberID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Announcement -> User (author, nullable)
+            modelBuilder.Entity<Announcement>()
+                .HasOne(a => a.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(a => a.CreatedByUserID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Notification -> User (recipient)
+            modelBuilder.Entity<Notification>()
+                .HasOne(n => n.User)
+                .WithMany()
+                .HasForeignKey(n => n.UserID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ActivityComment -> Activity
+            modelBuilder.Entity<ActivityComment>()
+                .HasOne(c => c.Activity)
+                .WithMany(a => a.Comments)
+                .HasForeignKey(c => c.ActivityID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ActivityComment -> User (author)
+            modelBuilder.Entity<ActivityComment>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // AuditLog -> User (actor, nullable for system-level events)
+            modelBuilder.Entity<AuditLog>()
+                .HasOne(a => a.ActorUser)
+                .WithMany()
+                .HasForeignKey(a => a.ActorUserID)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

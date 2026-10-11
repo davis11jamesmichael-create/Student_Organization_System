@@ -97,6 +97,43 @@
 
     <div class="section-title">Quick Access</div>
 
+    @{
+        var latestAnnouncements = ViewBag.LatestAnnouncements as List<StudentOrganizationSystem.Models.Announcement>
+                                  ?? new List<StudentOrganizationSystem.Models.Announcement>();
+    }
+    @if (latestAnnouncements.Any())
+    {
+        <div class="section-title">Latest Announcements</div>
+        <div class="table-card">
+            <div class="table-card-header">
+                <h2>Announcements</h2>
+                <a asp-controller="Announcement" asp-action="Index" class="btn btn-sm btn-light">View all</a>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Title</th><th>Audience</th><th>Posted</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ann in latestAnnouncements)
+                        {
+                            <tr>
+                                <td>
+                                    @if (ann.IsPinned) { <span aria-label="Pinned">📌 </span> }
+                                    <a asp-controller="Announcement" asp-action="Details" asp-route-id="@ann.AnnouncementID">@ann.Title</a>
+                                </td>
+                                <td><span class="badge @(ann.Audience == AnnouncementAudience.All ? "badge-active" : ann.Audience == AnnouncementAudience.Members ? "badge-member" : "badge-admin")">@ann.Audience</span></td>
+                                <td>@ann.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <div class="section-title">Quick Access</div>
+
     <div class="quick-grid">
 
         <a asp-controller="Member" asp-action="Index" class="quick-card">

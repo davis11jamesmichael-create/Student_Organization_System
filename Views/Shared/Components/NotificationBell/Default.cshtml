@@ -1,0 +1,14 @@
+@model int
+@{
+    var hasUnread = Model > 0;
+}
+<a class="icon-btn topbar-bell @(hasUnread ? "has-unread" : "")"
+   asp-controller="Notification" asp-action="Index"
+   title="Notifications"
+   aria-label="Notifications@(hasUnread ? $", {Model} unread" : "")">
+    <span aria-hidden="true">🔔</span>
+    @if (hasUnread)
+    {
+        <span class="bell-badge" aria-hidden="true">@(Model > 99 ? "99+" : Model.ToString())</span>
+    }
+</a>

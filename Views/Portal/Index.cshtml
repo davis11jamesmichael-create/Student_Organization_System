@@ -58,6 +58,39 @@
 
     </div>
 
+    @{
+        var latestAnnouncements = ViewBag.LatestAnnouncements as List<StudentOrganizationSystem.Models.Announcement>
+                                  ?? new List<StudentOrganizationSystem.Models.Announcement>();
+    }
+    @if (latestAnnouncements.Any())
+    {
+        <div class="table-card">
+            <div class="table-card-header">
+                <h2>Latest Announcements</h2>
+                <a asp-controller="Announcement" asp-action="Index" class="btn btn-sm btn-light">View all</a>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Title</th><th>Posted</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ann in latestAnnouncements)
+                        {
+                            <tr>
+                                <td>
+                                    @if (ann.IsPinned) { <span aria-label="Pinned">📌 </span> }
+                                    <a asp-controller="Announcement" asp-action="Details" asp-route-id="@ann.AnnouncementID">@ann.Title</a>
+                                </td>
+                                <td>@ann.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
     <div class="form-container">
 
         <div class="details-card">

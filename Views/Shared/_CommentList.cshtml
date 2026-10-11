@@ -1,0 +1,81 @@
+@using System.Security.Claims
+@model IEnumerable<StudentOrganizationSystem.Models.ActivityComment>
+
+@{
+    var activityId = (int)ViewBag.CommentActivityId;
+    var currentUserId = int.TryParse(
+        User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var uid) ? uid : 0;
+    var isAdmin = User.IsInRole(AppRoles.Admin);
+}
+
+<div class="table-card comment-section">
+
+    <div class="table-card-header">
+        <h2>Discussion</h2>
+        <span class="record-count">@Model.Count() comment(s)</span>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <p>No comments yet. Be the first to start the discussion.</p>
+        </div>
+    }
+    else
+    {
+        <div class="comment-list">
+            @foreach (var c in Model)
+            {
+                var canModify = isAdmin || c.UserID == currentUserId;
+                <div class="comment-item">
+                    <div class="comment-meta">
+                        <strong>@(c.User?.Username ?? "Unknown")</strong>
+                        <span class="hint-cell">@c.CreatedAt.ToString("MMM dd, yyyy h:mm tt")</span>
+                        @if (c.UpdatedAt.HasValue)
+                        {
+                            <span class="hint-cell">(edited)</span>
+                        }
+                    </div>
+                    <div class="comment-body">@c.Body</div>
+                    @if (canModify)
+                    {
+                        <div class="comment-actions">
+                            <a asp-controller="ActivityComment" asp-action="Edit"
+                               asp-route-id="@c.CommentID" class="btn btn-sm btn-light">Edit</a>
+                            <form asp-controller="ActivityComment" asp-action="Delete"
+                                  asp-route-id="@c.CommentID" method="post" style="display:inline"
+                                  data-confirm="Delete this comment?">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    <div class="comment-form">
+        <h3>Add a comment</h3>
+        <form asp-controller="ActivityComment" asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="activityId" value="@activityId" />
+            <div class="form-group">
+                <textarea name="body" class="form-control" rows="3"
+                          placeholder="Write your comment here…" maxlength="1000"
+                          aria-label="Comment body"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Post Comment</button>
+        </form>
+    </div>
+
+</div>

@@ -221,5 +221,33 @@
                 event.preventDefault();
             }
         });
+
+        /* ── Back buttons (data-back): prefer history, fall back to the href ── */
+        var backLinks = document.querySelectorAll("[data-back]");
+
+        for (var b = 0; b < backLinks.length; b++) {
+            backLinks[b].addEventListener("click", function (event) {
+                if (!document.referrer) {
+                    return;
+                }
+
+                var referrer;
+
+                try {
+                    referrer = new URL(document.referrer);
+                } catch (error) {
+                    return; // Unparsable referrer: just follow the href.
+                }
+
+                // Only a page from this same site is a safe place to go back to;
+                // otherwise the link's own href (a known-good page) is followed.
+                if (referrer.origin !== window.location.origin) {
+                    return;
+                }
+
+                event.preventDefault();
+                window.history.back();
+            });
+        }
     });
 })();

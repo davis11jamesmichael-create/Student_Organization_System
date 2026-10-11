@@ -48,6 +48,7 @@
     <link rel="stylesheet" href="~/css/dashboard.css" />
     <link rel="stylesheet" href="~/css/attendance.css" />
     <link rel="stylesheet" href="~/css/participation.css" />
+    <link rel="stylesheet" href="~/css/comments.css" />
     <link rel="stylesheet" href="~/css/print.css" />
     <link rel="stylesheet" href="~/css/responsive.css" />
 </head>
@@ -74,8 +75,7 @@
 
                 @if (isMember)
                 {
-                    @* A member can only reach the Portal, so the menu shows only
-                       the pages they can actually open. *@
+                    @* A member can only reach the Portal and Announcements. *@
                     <div class="nav-section">
                         <span class="nav-section-title">My Records</span>
                         <a class="@navClass("Portal", "Index")" aria-current="@navAria("Portal", "Index")"
@@ -87,6 +87,24 @@
                            asp-controller="Portal" asp-action="History">
                             <span class="nav-icon">📋</span>
                             <span class="nav-text">My Attendance &amp; Participation</span>
+                        </a>
+                        <a class="@navClass("Portal", "Activities")" aria-current="@navAria("Portal", "Activities")"
+                           asp-controller="Portal" asp-action="History">
+                            <span class="nav-icon">💬</span>
+                            <span class="nav-text">Discussions</span>
+                        </a>
+                    </div>
+                    <div class="nav-section">
+                        <span class="nav-section-title">Communication</span>
+                        <a class="@navClass("Announcement", "Index")" aria-current="@navAria("Announcement", "Index")"
+                           asp-controller="Announcement" asp-action="Index">
+                            <span class="nav-icon">📢</span>
+                            <span class="nav-text">Announcements</span>
+                        </a>
+                        <a class="@navClass("Notification", "Index")" aria-current="@navAria("Notification", "Index")"
+                           asp-controller="Notification" asp-action="Index">
+                            <span class="nav-icon">🔔</span>
+                            <span class="nav-text">Notifications</span>
                         </a>
                     </div>
                 }
@@ -154,15 +172,25 @@
                             <span class="nav-text">Reports</span>
                         </a>
                     </div>
+
+                    <div class="nav-section">
+                        <span class="nav-section-title">Communication</span>
+                        <a class="@navClass("Announcement", "Index")" aria-current="@navAria("Announcement", "Index")"
+                           asp-controller="Announcement" asp-action="Index">
+                            <span class="nav-icon">📢</span>
+                            <span class="nav-text">Announcements</span>
+                        </a>
+                        <a class="@navClass("Notification", "Index")" aria-current="@navAria("Notification", "Index")"
+                           asp-controller="Notification" asp-action="Index">
+                            <span class="nav-icon">🔔</span>
+                            <span class="nav-text">Notifications</span>
+                        </a>
+                    </div>
                 }
 
             </nav>
 
             <div class="sidebar-footer">
-                <a class="sidebar-signout" asp-controller="Account" asp-action="ChangePassword">
-                    <span aria-hidden="true">🔒</span>
-                    Change password
-                </a>
                 <form asp-controller="Account" asp-action="Logout" method="post">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="sidebar-signout">
@@ -203,6 +231,7 @@
                 </form>
 
                 <div class="topbar-actions">
+                    @await Component.InvokeAsync("NotificationBell")
                     <a class="topbar-user" asp-controller="Profile" asp-action="Index"
                        title="My profile">
                         @if (!string.IsNullOrWhiteSpace(userAvatar))

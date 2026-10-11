@@ -1,0 +1,19 @@
+@{
+    // A2/A3: one reusable Back control. The caller may pass an explicit fallback
+    // through ViewData["BackFallback"]; with none, staff fall back to the
+    // Dashboard and a Member to the Portal (a Member cannot open the staff
+    // Dashboard). site.js turns this into history.back() when there is a usable
+    // same-origin referrer, and the href is followed otherwise - so the link
+    // always works, even with JavaScript off.
+    var fallback = ViewData["BackFallback"] as string;
+
+    if (string.IsNullOrWhiteSpace(fallback))
+    {
+        fallback = User.IsInRole(AppRoles.Member)
+            ? Url.Action("Index", "Portal")
+            : Url.Action("Index", "Home");
+    }
+}
+<a class="btn-back" data-back href="@fallback">
+    <span aria-hidden="true">&larr;</span> Back
+</a>

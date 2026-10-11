@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +38,13 @@ builder.Services.AddScoped<IPasswordHasher<User>,
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<LoginAttemptTracker>();
 
+// C2: the per-request check that re-reads an account's stamp, active flag and
+// role, with a short-lived cache in front of it.
+builder.Services.AddScoped<SecurityStampGuard>();
+
+// B2: in-app notifications.
+builder.Services.AddScoped<NotificationService>();
+
 // Add cookie authentication
 builder.Services.AddAuthentication(
     CookieAuthenticationDefaults.AuthenticationScheme)
@@ -47,6 +56,54 @@ builder.Services.AddAuthentication(
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
 
         options.SlidingExpiration = true;
+
+        // C2 (boltai.md finding 2): an eight-hour cookie must not keep old
+        // privileges. Every request re-checks the cookie against the live account -
+        // stamp, active flag and role - and rejects it when anything has moved, so
+        // a demoted or deactivated user is signed out on their next click instead
+        // of at the end of the day.
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnValidatePrincipal = async context =>
+            {
+                var principal = context.Principal;
+
+                if (principal?.Identity?.IsAuthenticated != true)
+                {
+                    return;
+                }
+
+                var idValue = principal.FindFirst(
+                    ClaimTypes.NameIdentifier)?.Value;
+
+                var validator = context.HttpContext.RequestServices
+                    .GetRequiredService<SecurityStampGuard>();
+
+                var current = int.TryParse(idValue, out var userId)
+                    ? await validator.GetCurrentAsync(userId)
+                    : null;
+
+                var stillValid = current != null
+                    && SecurityStampGuard.IsCurrent(
+                        principal.FindFirst(AppClaims.SecurityStamp)?.Value,
+                        current.SecurityStamp,
+                        current.IsActive,
+                        principal.FindFirst(ClaimTypes.Role)?.Value,
+                        current.RoleName);
+
+                if (stillValid)
+                {
+                    return;
+                }
+
+                // The account is gone, deactivated, or has a new stamp/role: the
+                // cookie stops being honored here.
+                context.RejectPrincipal();
+
+                await context.HttpContext.SignOutAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme);
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
@@ -69,11 +126,33 @@ using (var scope = app.Services.CreateScope())
         var passwordHasher =
             services.GetRequiredService<IPasswordHasher<User>>();
 
-        await DbInitializer.InitializeAsync(
+        var outcome = await DbInitializer.InitializeAsync(
             context,
             passwordHasher,
             // Dev-only sample data (AUDIT.md P1.12); never seeded in Production.
-            seedSampleData: app.Environment.IsDevelopment());
+            seedSampleData: app.Environment.IsDevelopment(),
+            // C1: the first admin's password comes from configuration. An empty
+            // value means "generate one and print it once" (just below).
+            adminPassword: builder.Configuration["Seed:AdminPassword"]);
+
+        // C1: the generated password is shown exactly once, here. It is never
+        // written to a file or a log, and the account has to replace it at the
+        // first sign-in (MustChangePassword).
+        if (outcome.GeneratedPassword != null)
+        {
+            Console.WriteLine();
+            Console.WriteLine("==============================================================");
+            Console.WriteLine($" First administrator \"{outcome.AdminUsername}\" created.");
+            Console.WriteLine();
+            Console.WriteLine(" One-time password (shown once - change it at first sign-in):");
+            Console.WriteLine($"   {outcome.GeneratedPassword}");
+            Console.WriteLine();
+            Console.WriteLine(" To pick this password yourself next time, set");
+            Console.WriteLine(" Seed:AdminPassword in user-secrets, an environment variable");
+            Console.WriteLine(" or appsettings before the first run.");
+            Console.WriteLine("==============================================================");
+            Console.WriteLine();
+        }
     }
     catch (Exception exception)
     {
@@ -144,6 +223,29 @@ app.UseRouting();
 
 // Authentication must come before Authorization
 app.UseAuthentication();
+
+// C1 (boltai.md finding 1): a fresh account that still holds the password the
+// seeder printed may only reach the change-password form (plus the sign-out form
+// and static files). Everything else goes back to the form, so a first-run
+// password cannot be used to browse the system.
+app.Use(async (context, next) =>
+{
+    var mustChangePassword = context.User.Identity?.IsAuthenticated == true
+        && string.Equals(
+            context.User.FindFirst(AppClaims.MustChangePassword)?.Value,
+            "true",
+            StringComparison.Ordinal);
+
+    if (mustChangePassword
+        && !MustChangePasswordPolicy.IsAllowed(context.Request.Path))
+    {
+        context.Response.Redirect("/Account/ChangePassword");
+        return;
+    }
+
+    await next();
+});
+
 app.UseAuthorization();
 
 // Default MVC route

@@ -70,6 +70,87 @@ namespace StudentOrganizationSystem.Migrations
                     b.ToTable("Activities");
                 });
 
+            modelBuilder.Entity("StudentOrganizationSystem.Models.ActivityComment", b =>
+                {
+                    b.Property<int>("CommentID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("CommentID"));
+
+                    b.Property<int>("ActivityID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UserID")
+                        .HasColumnType("int");
+
+                    b.HasKey("CommentID");
+
+                    b.HasIndex("ActivityID");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("ActivityComments");
+                });
+
+            modelBuilder.Entity("StudentOrganizationSystem.Models.Announcement", b =>
+                {
+                    b.Property<int>("AnnouncementID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("AnnouncementID"));
+
+                    b.Property<string>("Audience")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("CreatedByUserID")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("AnnouncementID");
+
+                    b.HasIndex("CreatedByUserID");
+
+                    b.ToTable("Announcements");
+                });
+
             modelBuilder.Entity("StudentOrganizationSystem.Models.Attendance", b =>
                 {
                     b.Property<int>("AttendanceID")
@@ -103,6 +184,48 @@ namespace StudentOrganizationSystem.Migrations
                         .IsUnique();
 
                     b.ToTable("Attendances");
+                });
+
+            modelBuilder.Entity("StudentOrganizationSystem.Models.AuditLog", b =>
+                {
+                    b.Property<int>("AuditLogID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("AuditLogID"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int?>("ActorUserID")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int?>("EntityID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EntityName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)");
+
+                    b.HasKey("AuditLogID");
+
+                    b.HasIndex("ActorUserID");
+
+                    b.ToTable("AuditLogs");
                 });
 
             modelBuilder.Entity("StudentOrganizationSystem.Models.Member", b =>
@@ -180,6 +303,52 @@ namespace StudentOrganizationSystem.Migrations
                     b.ToTable("Memberships");
                 });
 
+            modelBuilder.Entity("StudentOrganizationSystem.Models.Notification", b =>
+                {
+                    b.Property<int>("NotificationID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("NotificationID"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Link")
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
+
+                    b.Property<int>("UserID")
+                        .HasColumnType("int");
+
+                    b.HasKey("NotificationID");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("StudentOrganizationSystem.Models.Participation", b =>
                 {
                     b.Property<int>("ParticipationID")
@@ -248,8 +417,17 @@ namespace StudentOrganizationSystem.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("IsSuperAdmin")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int?>("MemberID")
                         .HasColumnType("int");
+
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -258,6 +436,11 @@ namespace StudentOrganizationSystem.Migrations
 
                     b.Property<int>("RoleID")
                         .HasColumnType("int");
+
+                    b.Property<string>("SecurityStamp")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -275,6 +458,35 @@ namespace StudentOrganizationSystem.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("StudentOrganizationSystem.Models.ActivityComment", b =>
+                {
+                    b.HasOne("StudentOrganizationSystem.Models.Activity", "Activity")
+                        .WithMany("Comments")
+                        .HasForeignKey("ActivityID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StudentOrganizationSystem.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Activity");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("StudentOrganizationSystem.Models.Announcement", b =>
+                {
+                    b.HasOne("StudentOrganizationSystem.Models.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserID")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
                 });
 
             modelBuilder.Entity("StudentOrganizationSystem.Models.Attendance", b =>
@@ -296,6 +508,16 @@ namespace StudentOrganizationSystem.Migrations
                     b.Navigation("Member");
                 });
 
+            modelBuilder.Entity("StudentOrganizationSystem.Models.AuditLog", b =>
+                {
+                    b.HasOne("StudentOrganizationSystem.Models.User", "ActorUser")
+                        .WithMany()
+                        .HasForeignKey("ActorUserID")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ActorUser");
+                });
+
             modelBuilder.Entity("StudentOrganizationSystem.Models.Membership", b =>
                 {
                     b.HasOne("StudentOrganizationSystem.Models.Member", "Member")
@@ -305,6 +527,17 @@ namespace StudentOrganizationSystem.Migrations
                         .IsRequired();
 
                     b.Navigation("Member");
+                });
+
+            modelBuilder.Entity("StudentOrganizationSystem.Models.Notification", b =>
+                {
+                    b.HasOne("StudentOrganizationSystem.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("StudentOrganizationSystem.Models.Participation", b =>
@@ -347,6 +580,8 @@ namespace StudentOrganizationSystem.Migrations
             modelBuilder.Entity("StudentOrganizationSystem.Models.Activity", b =>
                 {
                     b.Navigation("Attendances");
+
+                    b.Navigation("Comments");
 
                     b.Navigation("Participations");
                 });

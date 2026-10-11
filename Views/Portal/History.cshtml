@@ -41,6 +41,7 @@
                             <th>Participation Type</th>
                             <th>Status</th>
                             <th>Recorded</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -69,6 +70,11 @@
                                     { @record.RecordedAt.Value.ToString("MMM dd, yyyy") }
                                     else
                                     { <span class="hint-cell">—</span> }
+                                </td>
+                                <td>
+                                    <a asp-controller="Portal" asp-action="Activities"
+                                       asp-route-id="@record.ActivityID"
+                                       class="btn btn-sm btn-light">💬 Discuss</a>
                                 </td>
                             </tr>
                         }

@@ -27,8 +27,22 @@ namespace StudentOrganizationSystem.Services
 
                 new Claim(
                     ClaimTypes.Role,
-                    user.Role?.RoleName ?? string.Empty)
+                    user.Role?.RoleName ?? string.Empty),
+
+                // C2: the stamp the cookie is re-checked against on every request.
+                new Claim(
+                    AppClaims.SecurityStamp,
+                    user.SecurityStamp)
             };
+
+            // C1: only a first-run administrator carries this, and it keeps every
+            // other page closed until the password has been replaced.
+            if (user.MustChangePassword)
+            {
+                claims.Add(new Claim(
+                    AppClaims.MustChangePassword,
+                    "true"));
+            }
 
             // Only Member accounts point at a Members row (decision D3/D2).
             if (user.MemberID.HasValue)
